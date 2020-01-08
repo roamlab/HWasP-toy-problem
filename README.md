@@ -34,11 +34,8 @@ i.e. reward:
 -alpha*(y2-h)**2 - beta*f**2
 ``` 
 - 3 optimization cases: optimize for
-
     - comp. policy and spring stiffness k
-
     - comp. policy and mass m1
-
     - comp. policy and bar length l
 
 This repo includes:
