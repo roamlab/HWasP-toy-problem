@@ -28,8 +28,8 @@ The 1D mass-spring toy problem of hardware-software co-optimization using RL
 ```
 Problem statement:
 - Input to the system: a force f on m2
-- Goal: optimize the computational policy f and the mechanical structure to drag m2 to the goal point with minimum effort
-i.e. reward: 
+- Goal: optimize the computational policy f and the mechanical structure to drag m2 to the goal point with minimum effort,
+i.e. reward is: 
 ```
 -alpha*(y2-h)**2 - beta*f**2
 ``` 
@@ -41,5 +41,4 @@ i.e. reward:
 This repo includes:
 - launchers: garage launchers
 - mass-spring-envs: the gym environments for the mass-spring system with different optimization goals
-- models: the computational graphs inplemented in Tensorflow
-- policies: the garage policies
+- policies: the computational graphs and garage policies
