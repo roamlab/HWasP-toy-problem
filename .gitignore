@@ -133,3 +133,6 @@ dmypy.json
 
 # garage data
 data/
+
+#virtual env
+venv_mass_spring/

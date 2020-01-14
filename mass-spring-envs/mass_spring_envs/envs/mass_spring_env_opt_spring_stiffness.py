@@ -48,7 +48,7 @@ class MassSpringEnv_OptSpringStiffness(gym.Env):
     1D mass-spring toy problem.
     Case I: optimizing the spring stiffness k
     Overall policy: pi = f - k*y1
-    Action: pi, F(pass-in F for reward calculation)
+    Action: pi, f(pass-in F for reward calculation)
     observation: y1 (or y2)
     '''
 
@@ -65,7 +65,8 @@ class MassSpringEnv_OptSpringStiffness(gym.Env):
         is reached, reset() should be called to reset the environment's internal state.
         Input
         -----
-        action : an action provided by the environment
+        action : an action provided by the policy, here a combination of redefined policy action (pi) and additional info (f) for reward calculation
+        
         Outputs
         -------
         (observation, reward, done, info)
@@ -74,7 +75,7 @@ class MassSpringEnv_OptSpringStiffness(gym.Env):
         done : a boolean, indicating whether the episode has ended
         info : a dictionary containing other diagnostic information from the previous action
         """
-        pi = action[0] # overall policy output
+        pi = action[0] # redifined policy output
         f_total = pi + (m1+ m2) * g
         a = f_total / (m1+ m2)
         self.v = self.v + a * dt # simple Euler integration

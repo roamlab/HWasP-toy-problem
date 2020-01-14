@@ -2,15 +2,9 @@ import unittest
 import gym
 import numpy as np
 
-# import os
-# print(os.environ['PYTHONPATH'])
-
 import matplotlib.pyplot as plt
 
-# import sys
-# sys.path.append('.')
 import mass_spring_envs
-# from mass_spring_envs.envs.mass_spring_env_opt_spring_stiffness import MassSpringEnv_OptSpringStiffness
 
 class TestMassSpringEnv_OptSpringStiffness(unittest.TestCase):
     @classmethod
