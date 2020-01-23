@@ -8,8 +8,6 @@ from garage.tf.distributions.diagonal_gaussian import DiagonalGaussian
 from policies.opt_spring_stiffness.mech_policy_model import MechPolicyModel
 
 
-LARGE_NUMBER = 1e3
-
 
 class CompMechPolicy_OptSpringStiffness(StochasticPolicy2):
     def __init__(self, 
@@ -27,15 +25,15 @@ class CompMechPolicy_OptSpringStiffness(StochasticPolicy2):
 
 
     def _initialize(self):
-        y1_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, self.obs_dim), name='y1_ph')
+        y1_and_v1_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, self.obs_dim), name='y1_and_v1_ph') # obs: y1 and v1
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
+            f_ts = self.comp_policy_model.build(y1_and_v1_ph)
+            pi_and_f_ts, log_std_ts = self.mech_policy_model.build([f_ts, y1_and_v1_ph])
 
-            f_ts = self.comp_policy_model.build(y1_ph)
-            pi_and_f_ts, log_std_ts = self.mech_policy_model.build([f_ts, y1_ph])
-
-        self._f_policy = tf.compat.v1.get_default_session().make_callable([pi_and_f_ts, log_std_ts], feed_list=[y1_ph])
+        self._f_policy = tf.compat.v1.get_default_session().make_callable([pi_and_f_ts, log_std_ts], feed_list=[y1_and_v1_ph])
         self._dist = DiagonalGaussian(dim=self.action_dim)
+
 
 
     def get_actions(self, observations):
@@ -52,17 +50,18 @@ class CompMechPolicy_OptSpringStiffness(StochasticPolicy2):
             - log_std (numpy.ndarray): Log standard deviations of the
                 distribution.
         '''
+
         flat_obs = self.observation_space.flatten_n(observations)
         pi_and_f, log_stds = self._f_policy(flat_obs)
-        # log_stds = 0.1*np.ones_like(pi_and_f)
-        log_stds[:, 1] = -LARGE_NUMBER # only the actual pi need stochasticity, the f is just an extra info, log_std=-inf -> std=0 
         rnd = np.random.normal(size=pi_and_f.shape)
         pi_and_f_samples = rnd * np.exp(log_stds) + pi_and_f
         samples = self.action_space.unflatten_n(pi_and_f_samples)
         mean = self.action_space.unflatten_n(pi_and_f)
         log_stds = self.action_space.unflatten_n(log_stds)
-        dist_info = dict(mean=mean, log_std=log_stds)
-        return samples, dist_info
+        k_ts = self.mech_policy_model.get_mech_params()[1]
+        k = np.full(mean.shape, tf.compat.v1.get_default_session().run(k_ts))
+        info = dict(mean=mean, log_std=log_stds, k=k)
+        return samples, info
 
 
     def get_action(self, observation):
@@ -81,15 +80,15 @@ class CompMechPolicy_OptSpringStiffness(StochasticPolicy2):
         '''
         flat_obs = self.observation_space.flatten(observation)
         pi_and_f, log_std = self._f_policy([flat_obs])
-        # log_std = 0.1*np.ones_like(pi_and_f)
-        log_std[:, 1] = -LARGE_NUMBER # only the actual pi need stochasticity, the f is just an extra info, log_std=-inf -> std=0 
         rnd = np.random.normal(size=pi_and_f.shape)
         pi_and_f_sample = rnd * np.exp(log_std) + pi_and_f
         sample = self.action_space.unflatten(pi_and_f_sample[0])
         mean = self.action_space.unflatten(pi_and_f[0])
         log_std = self.action_space.unflatten(log_std[0])
-        dist_info = dict(mean=mean, log_std=log_std)
-        return sample, dist_info
+        k_ts = self.mech_policy_model.get_mech_params()[1]
+        k = np.full(mean.shape, tf.compat.v1.get_default_session().run(k_ts))
+        info = dict(mean=mean, log_std=log_std, k=k)
+        return sample, info
 
     @property
     def distribution(self):

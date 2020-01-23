@@ -42,3 +42,4 @@ This repo includes:
 - launchers: garage launchers
 - mass-spring-envs: the gym environments for the mass-spring system with different optimization goals
 - policies: the computational graphs and garage policies
+- policy_players: replay the trained policy and plot the observations and actions

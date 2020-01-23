@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import mass_spring_envs
+from mass_spring_envs.envs.mass_spring_env_opt_spring_stiffness import MassSpringEnv_OptSpringStiffness
 
 class TestMassSpringEnv_OptSpringStiffness(unittest.TestCase):
     @classmethod
@@ -20,7 +21,8 @@ class TestMassSpringEnv_OptSpringStiffness(unittest.TestCase):
 
     def setUp(self):
         # everything in setup gets re instantiated for each test function
-        self.env = gym.make("MassSpringEnv_OptSpringStiffness-v1")
+        # self.env = gym.make("MassSpringEnv_OptSpringStiffness-v1")
+        self.env = MassSpringEnv_OptSpringStiffness()
         obs = self.env.reset()
 
     

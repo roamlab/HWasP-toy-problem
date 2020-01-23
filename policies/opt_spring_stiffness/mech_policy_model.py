@@ -39,8 +39,8 @@ K_UB = 1e2
 K_LB = 0
 K_RANGE = K_UB - K_LB
 # we use the sigmoid trick to limit the actual range of k: k = sigmoid(k_pre) * K_RANGE + K_LB
-# TODO: add scaling if there are numerical issues
 
+ACT_RANGE = 100.0
 
 class MechPolicyModel(Model):
     '''
@@ -73,7 +73,9 @@ class MechPolicyModel(Model):
         Return:
             output: Tensor output(s) of the model.
         """
-        f_ph, y1_ph = inputs[0]
+        f_ph, y1_and_v1_ph = inputs[0] # f_ph: (?, 1), y1_and_v1_ph: (?, 2)
+        f_ph = tf.multiply(f_ph, tf.compat.v1.constant(ACT_RANGE, dtype=tf.float32, name='ACT_RANGE')) # all these multiply() are scalar-tensor multiplication
+        y1_ph = y1_and_v1_ph[:, 0:1]
         self.k_pre_var = tf.compat.v1.get_variable('k_pre', initializer=self.k_pre_init, dtype=tf.float32, trainable=True)
         self.k_ts = tf.math.add(tf.nn.sigmoid(self.k_pre_var) * tf.compat.v1.constant(K_RANGE, dtype=tf.float32, name='K_RANGE'), 
             tf.compat.v1.constant(K_LB, dtype=tf.float32, name='K_LB'), 
@@ -88,10 +90,11 @@ class MechPolicyModel(Model):
             length=2,
             initializer=tf.constant_initializer(
                 self.log_std_init),
-            trainable=False,
+            trainable=True,
             name='log_std')
 
         output_ts = tf.concat([pi_ts, f_ph], axis=1, name='pi_and_f')
+
         return output_ts, self.log_std_var # always see the combo (of pi and f) as the action
 
     def network_input_spec(self):
