@@ -5,9 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import mass_spring_envs
-from mass_spring_envs.envs.mass_spring_env_opt_spring_stiffness import MassSpringEnv_OptSpringStiffness
+from mass_spring_envs.envs.mass_spring_env_opt_k_hw_as_policy import MassSpringEnv_OptK_HwAsPolicy
 
-class TestMassSpringEnv_OptSpringStiffness(unittest.TestCase):
+from shared_params import params
+
+class Test_MassSpringEnv_OptK_HwAsPolicy(unittest.TestCase):
     @classmethod
     def setupClass(cls):
         # runs once in class instantiation
@@ -21,8 +23,8 @@ class TestMassSpringEnv_OptSpringStiffness(unittest.TestCase):
 
     def setUp(self):
         # everything in setup gets re instantiated for each test function
-        # self.env = gym.make("MassSpringEnv_OptSpringStiffness-v1")
-        self.env = MassSpringEnv_OptSpringStiffness()
+        # self.env = gym.make("MassSpringEnv_OptK_HwAsPolicy-v1")
+        self.env = MassSpringEnv_OptK_HwAsPolicy()
         obs = self.env.reset()
 
     
@@ -48,7 +50,7 @@ class TestMassSpringEnv_OptSpringStiffness(unittest.TestCase):
         n_steps = 1000
         obs_arr = np.zeros(n_steps)
         for i in range(n_steps):
-            action = [-2.0*9.8, 0]
+            action = [-(params.m1+params.m2)*params.g, 0]
             obs, reward, done, info = self.env.step(action)
             obs_arr[i] = obs[0]
             if done:

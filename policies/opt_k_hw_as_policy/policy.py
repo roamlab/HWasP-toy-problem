@@ -2,19 +2,18 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.policies.base2 import StochasticPolicy2
+from garage.tf.policies.base import StochasticPolicy
 from garage.tf.distributions.diagonal_gaussian import DiagonalGaussian
 
-from policies.opt_spring_stiffness.mech_policy_model import MechPolicyModel
+from policies.opt_k_hw_as_policy.mech_policy_model import MechPolicyModel
 
 
-
-class CompMechPolicy_OptSpringStiffness(StochasticPolicy2):
+class CompMechPolicy_OptK_HwAsPolicy(StochasticPolicy):
     def __init__(self, 
                 env_spec,
                 comp_policy_model,
                 mech_policy_model,
-                name='comp_mech_policy_opt_spring_stiffness'
+                name='comp_mech_policy_opt_k_hw_as_policy'
                 ):
         super().__init__(name, env_spec)
         self.comp_policy_model = comp_policy_model

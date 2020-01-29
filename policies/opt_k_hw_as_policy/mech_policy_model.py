@@ -32,15 +32,16 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models.base import Model
-from garage.tf.core.parameter import parameter
+from garage.tf.models.parameter import parameter
 
+from shared_params import params
 
-K_UB = 1e2
-K_LB = 0
-K_RANGE = K_UB - K_LB
-# we use the sigmoid trick to limit the actual range of k: k = sigmoid(k_pre) * K_RANGE + K_LB
+k_ub = params.k_ub
+k_lb = params.k_lb
+k_range = params.k_range
+# we use the sigmoid trick to limit the actual range of k: k = sigmoid(k_pre) * k_range + k_lb
 
-ACT_RANGE = 100.0
+force_range = params.force_range
 
 class MechPolicyModel(Model):
     '''
@@ -74,11 +75,11 @@ class MechPolicyModel(Model):
             output: Tensor output(s) of the model.
         """
         f_ph, y1_and_v1_ph = inputs[0] # f_ph: (?, 1), y1_and_v1_ph: (?, 2)
-        f_ph = tf.multiply(f_ph, tf.compat.v1.constant(ACT_RANGE, dtype=tf.float32, name='ACT_RANGE')) # all these multiply() are scalar-tensor multiplication
+        f_ph = tf.multiply(f_ph, tf.compat.v1.constant(force_range, dtype=tf.float32, name='force_range')) # all these multiply() are scalar-tensor multiplication
         y1_ph = y1_and_v1_ph[:, 0:1]
         self.k_pre_var = tf.compat.v1.get_variable('k_pre', initializer=self.k_pre_init, dtype=tf.float32, trainable=True)
-        self.k_ts = tf.math.add(tf.nn.sigmoid(self.k_pre_var) * tf.compat.v1.constant(K_RANGE, dtype=tf.float32, name='K_RANGE'), 
-            tf.compat.v1.constant(K_LB, dtype=tf.float32, name='K_LB'), 
+        self.k_ts = tf.math.add(tf.nn.sigmoid(self.k_pre_var) * tf.compat.v1.constant(k_range, dtype=tf.float32, name='k_range'), 
+            tf.compat.v1.constant(k_lb, dtype=tf.float32, name='k_lb'), 
             name='k')
         f_spring_ts = tf.multiply(-y1_ph, self.k_ts, name='f_spring')
 

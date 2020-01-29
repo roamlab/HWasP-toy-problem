@@ -15,7 +15,7 @@ import mass_spring_envs
 def run_task(snapshot_config, *_):
     """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
-        env = TfEnv(normalize(gym.make('mass_spring_envs:MassSpringEnv_OptSpringStiffness-v1')))
+        env = TfEnv(normalize(gym.make('mass_spring_envs:MassSpringEnv_OptK_HwAsPolicy-v1')))
 
         policy = GaussianMLPPolicy(
             env_spec=env.spec,

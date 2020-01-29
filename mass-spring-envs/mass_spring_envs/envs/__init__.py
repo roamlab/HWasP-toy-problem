@@ -1,1 +1,1 @@
-from mass_spring_envs.envs.mass_spring_env_opt_spring_stiffness import MassSpringEnv_OptSpringStiffness
+from mass_spring_envs.envs.mass_spring_env_opt_k_hw_as_policy import MassSpringEnv_OptK_HwAsPolicy

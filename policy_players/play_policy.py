@@ -42,9 +42,12 @@ if __name__ == '__main__':
                 deterministic=True)
             plt.figure()
             plt.title('observations')
+            plt.xlabel('iteration')
             plt.plot(range(args.max_path_length), path['observations'])
+
             plt.figure()
             plt.title('actions')
+            plt.xlabel('iteration')
             plt.plot(range(args.max_path_length), path['actions'])
             plt.show(block=False)
 

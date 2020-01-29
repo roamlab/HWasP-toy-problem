@@ -31,30 +31,35 @@ illustration of the system:
 import gym
 import numpy as np
 
-# in SI
-ACT_RANGE = 100.0 # force in N
-OBS_RANGE = 10.0 # pos in m
-m1 = 1.0
-m2 = 1.0
-h = 2.0
-l = 1.0
-g = 9.8
-dt = 0.002
-n_steps_per_action = 5
+from shared_params import params
 
-class MassSpringEnv_OptSpringStiffness(gym.Env):
+force_range = params.force_range
+pos_range = params.pos_range
+vel_range = params.vel_range
+m1 = params.m1
+m2 = params.m2
+h = params.h
+l = params.l
+g = params.g
+dt = params.dt
+n_steps_per_action = params.n_steps_per_action
+
+reward_alpha = params.reward_alpha
+reward_beta = params.reward_beta
+
+class MassSpringEnv_OptK_HwAsPolicy(gym.Env):
     '''
     1D mass-spring toy problem.
     Case I: optimizing the spring stiffness k
     Overall policy: pi = f - k*y1
-    Action: pi, f(pass-in F for reward calculation)
+    Action: pi, f(pass-in f for reward calculation)
     observation: y1, v1
     '''
 
     def __init__(self):
-        self.action_space = gym.spaces.Box(low=-ACT_RANGE, high=ACT_RANGE, shape=(2, ), dtype=np.float64) # 1st: redifined action pi, 2nd: original action f
-        self.observation_space = gym.spaces.Box(low=0.0, high=OBS_RANGE, shape=(2, ), dtype=np.float64) # obs y1 and v1
-        self.v = 0.0 # vel of both masses
+        self.action_space = gym.spaces.Box(low=-force_range, high=force_range, shape=(2, ), dtype=np.float32) # 1st: redifined action pi, 2nd: original action f
+        self.observation_space = gym.spaces.Box(low=np.array([-pos_range, -vel_range]), high=np.array([pos_range, vel_range]), dtype=np.float32) # obs y1 and v1
+        self.v1 = 0.0 # vel of both masses
         self.y1 = 0.0
         self.step_cnt = 0
 
@@ -81,22 +86,22 @@ class MassSpringEnv_OptSpringStiffness(gym.Env):
         a = f_total / (m1+ m2)
 
         for _ in range(n_steps_per_action):
-            self.v = self.v + a * dt # simple Euler integration
-            self.y1 = self.y1 + self.v * dt
-        
+            # self.v1 = self.v1 + a * dt # simple Euler integration
+            # self.y1 = self.y1 + self.v1 * dt
+
+            v1_curr = self.v1
+            y1_curr = self.y1
+            v1_next = v1_curr + a * dt
+            y1_next = y1_curr + v1_curr * dt  + 0.5 * a * dt**2 # mid-point Euler integration
+            self.v1 = v1_next
+            self.y1 = y1_next
+
         y2 = self.y1 + l
 
-        obs = np.array([self.y1, self.v])
+        obs = np.array([self.y1, self.v1])
 
-        alpha = 10.0
-        beta = 0.001
-        gamma = 0.0
-        reward = -alpha * (y2 - h)**2 - beta*f**2 - gamma*self.v**2
+        reward = -reward_alpha * (y2 - h)**2 - reward_beta*f**2
 
-        # if self.y1 < 0.0 or y2 > OBS_RANGE:
-        #     done = True
-        # else:
-        #     done = False
         done = False
         info = {}
 
@@ -110,10 +115,10 @@ class MassSpringEnv_OptSpringStiffness(gym.Env):
         return obs, reward, done, info
 
     def reset(self):
-        self.v = 0.0
+        self.v1 = 0.0
         self.y1 = 0.0
         self.step_cnt = 0
-        return np.array([self.y1, self.v])
+        return np.array([self.y1, self.v1])
     
 
     def render(self, mode='human'):
