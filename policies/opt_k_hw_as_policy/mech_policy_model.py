@@ -41,7 +41,7 @@ k_lb = params.k_lb
 k_range = params.k_range
 # we use the sigmoid trick to limit the actual range of k: k = sigmoid(k_pre) * k_range + k_lb
 
-force_range = params.force_range
+half_force_range = params.half_force_range
 
 class MechPolicyModel(Model):
     '''
@@ -75,7 +75,7 @@ class MechPolicyModel(Model):
             output: Tensor output(s) of the model.
         """
         f_ph, y1_and_v1_ph = inputs[0] # f_ph: (?, 1), y1_and_v1_ph: (?, 2)
-        f_ph = tf.multiply(f_ph, tf.compat.v1.constant(force_range, dtype=tf.float32, name='force_range')) # all these multiply() are scalar-tensor multiplication
+        f_ph = tf.multiply(f_ph, tf.compat.v1.constant(half_force_range, dtype=tf.float32, name='half_force_range')) # all these multiply() are scalar-tensor multiplication
         y1_ph = y1_and_v1_ph[:, 0:1]
         self.k_pre_var = tf.compat.v1.get_variable('k_pre', initializer=self.k_pre_init, dtype=tf.float32, trainable=True)
         self.k_ts = tf.math.add(tf.nn.sigmoid(self.k_pre_var) * tf.compat.v1.constant(k_range, dtype=tf.float32, name='k_range'), 
@@ -87,7 +87,7 @@ class MechPolicyModel(Model):
 
 
         self.log_std_var = parameter(
-            input_var=y1_ph,
+            input_var=y1_ph, # actually not linked to the input, this is just to match the dimension of the inputs for batches
             length=2,
             initializer=tf.constant_initializer(
                 self.log_std_init),

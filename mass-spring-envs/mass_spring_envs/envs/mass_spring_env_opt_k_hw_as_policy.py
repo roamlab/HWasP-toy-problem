@@ -33,9 +33,9 @@ import numpy as np
 
 from shared_params import params
 
-force_range = params.force_range
+half_force_range = params.half_force_range
 pos_range = params.pos_range
-vel_range = params.vel_range
+half_vel_range = params.half_vel_range
 m1 = params.m1
 m2 = params.m2
 h = params.h
@@ -57,8 +57,8 @@ class MassSpringEnv_OptK_HwAsPolicy(gym.Env):
     '''
 
     def __init__(self):
-        self.action_space = gym.spaces.Box(low=-force_range, high=force_range, shape=(2, ), dtype=np.float32) # 1st: redifined action pi, 2nd: original action f
-        self.observation_space = gym.spaces.Box(low=np.array([-pos_range, -vel_range]), high=np.array([pos_range, vel_range]), dtype=np.float32) # obs y1 and v1
+        self.action_space = gym.spaces.Box(low=-half_force_range, high=half_force_range, shape=(2, ), dtype=np.float32) # 1st: redifined action pi, 2nd: original action f
+        self.observation_space = gym.spaces.Box(low=np.array([-pos_range, -half_vel_range]), high=np.array([pos_range, half_vel_range]), dtype=np.float32) # obs y1 and v1
         self.v1 = 0.0 # vel of both masses
         self.y1 = 0.0
         self.step_cnt = 0
@@ -105,13 +105,13 @@ class MassSpringEnv_OptK_HwAsPolicy(gym.Env):
         done = False
         info = {}
 
-        self.step_cnt += 1
-        if self.step_cnt == 499:
-            print()
-            print('pi: ', pi)
-            print('f: ', f)
-            print('y2: ', y2)
-            print()
+        # self.step_cnt += 1
+        # if self.step_cnt == 499:
+        #     print()
+        #     print('pi: ', pi)
+        #     print('f: ', f)
+        #     print('y2: ', y2)
+        #     print()
         return obs, reward, done, info
 
     def reset(self):

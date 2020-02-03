@@ -5,3 +5,10 @@ register(
     entry_point='mass_spring_envs.envs:MassSpringEnv_OptK_HwAsPolicy',
     max_episode_steps=500,
 )
+
+
+register(
+    id='MassSpringEnv_OptK_HwAsAction-v1',
+    entry_point='mass_spring_envs.envs:MassSpringEnv_OptK_HwAsAction',
+    max_episode_steps=500,
+)

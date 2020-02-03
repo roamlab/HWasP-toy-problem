@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from policies.opt_k_hw_as_policy.mech_policy_model import MechPolicyModel
 
 from garage.tf.models import MLPModel
-from policies.opt_k_hw_as_policy.policy import CompMechPolicy_OptK_HwAsPolicy
+from policies.opt_k_hw_as_policy.comp_mech_policy import CompMechPolicy_OptK_HwAsPolicy
 from garage.tf.envs import TfEnv
 import gym
 import mass_spring_envs
@@ -49,24 +49,25 @@ class TestPolicy_OptK_HwAsPolicy(unittest.TestCase):
 
     def test_mech_policy_model(self):
         y1 = 0.1
+        v1 = 0.0
         f = 10.0
 
         mech_policy_model = MechPolicyModel(name='test_mech_policy_model', k_pre_init=params.k_pre_init, log_std_init=params.log_std_init)
 
         with tf.compat.v1.Session() as sess:
             f_ph = tf.compat.v1.placeholder(shape=(None, 1), dtype=tf.float32)
-            y1_ph = tf.compat.v1.placeholder(shape=(None, 1), dtype=tf.float32)
-            pi_and_f_ts, log_std = mech_policy_model.build([f_ph, y1_ph])
-            output = sess.run(pi_and_f_ts, feed_dict={f_ph: [[f]], y1_ph: [[y1]]})
-            self.assertAlmostEqual(output[0][0], params.force_range*f-params.k_init*y1)
-            self.assertAlmostEqual(output[0][1], params.force_range*f)
+            y1_and_v1_ph = tf.compat.v1.placeholder(shape=(None, 2), dtype=tf.float32)
+            pi_and_f_ts, log_std = mech_policy_model.build([f_ph, y1_and_v1_ph])
+            output = sess.run(pi_and_f_ts, feed_dict={f_ph: [[f]], y1_and_v1_ph: [[y1, v1]]})
+            self.assertAlmostEqual(output[0][0], params.half_force_range*f-params.k_init*y1)
+            self.assertAlmostEqual(output[0][1], params.half_force_range*f)
 
 
     def test_comp_mech_policy(self):
         y1 = 0.1
         v1 = 0.1
         
-        env = TfEnv(gym.make('MassSpringEnv_OptK_HwAsPolicy-v1'))
+        env = TfEnv(gym.make('MassSpringEnv_OptK_HwAsAction-v1'))
 
         comp_policy_model = MLPModel(output_dim=1, 
             hidden_sizes=(32, 32), 
@@ -82,15 +83,16 @@ class TestPolicy_OptK_HwAsPolicy(unittest.TestCase):
                 env_spec=env.spec, 
                 comp_policy_model=comp_policy_model, 
                 mech_policy_model=mech_policy_model)
+                
             actions = comp_mech_policy.get_actions([[y1, v1]])
             print('actions: ', actions)
-            self.assertTrue(np.allclose(actions[1]['mean'], np.array([[params.force_range*0-params.k_init*y1, 0.0]])))
+            self.assertTrue(np.allclose(actions[1]['mean'], np.array([[params.half_force_range*0-params.k_init*y1, 0.0]])))
             self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.log_std_init, params.log_std_init]])))
 
 
             action = comp_mech_policy.get_action([y1, v1])
             print('single action: ', action)
-            self.assertTrue(np.allclose(action[1]['mean'], np.array([params.force_range*0-params.k_init*y1, 0.0])))
+            self.assertTrue(np.allclose(action[1]['mean'], np.array([params.half_force_range*0-params.k_init*y1, 0.0])))
             self.assertTrue(np.allclose(action[1]['log_std'], np.array([params.log_std_init, params.log_std_init])))
             
             print(comp_mech_policy.distribution)
