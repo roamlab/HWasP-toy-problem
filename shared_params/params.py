@@ -3,7 +3,7 @@ import numpy as np
 # env params
 # in SI
 half_force_range = 10.0
-pos_range = 1.0
+pos_range = 0.5
 half_vel_range = 1.0
 
 m1 = 0.2
@@ -11,12 +11,12 @@ m2 = 0.2
 h = 0.2
 l = 0.1
 g = 9.8
-dt = 0.001
-n_steps_per_action = 10
+dt = 0.002
+n_steps_per_action = 5
 
-reward_alpha = 10.0
-reward_beta = 0.01
-
+reward_alpha = 40.0
+reward_beta = 0.1
+reward_gamma = 0.1
 
 # init values
 def inv_sigmoid(y, lb, ub):
@@ -28,12 +28,13 @@ def inv_sigmoid(y, lb, ub):
 k_ub = 100.0
 k_lb = 0.0
 k_range = k_ub - k_lb
-k_init = 10.0
+k_init = 50.0
 k_pre_init = inv_sigmoid(k_init, k_lb, k_ub)
-
+k_pre_init_lb = -5
+k_pre_init_ub = 5
 
 # init stds
-std_range_ratio = 0.2
+std_range_ratio = 0.3
 
 f_std_init = std_range_ratio * (half_force_range * 2)
 f_log_std_init = np.log(f_std_init)
@@ -47,7 +48,7 @@ comp_policy_network_size = (32, 32)
 # baseline_network_size = (32, 32)
 
 ppo_algo_kwargs = dict(
-    max_path_length=500,
+    max_path_length=1000,
     discount=0.99,
     gae_lambda=0.95,
     lr_clip_range=0.1,
@@ -60,7 +61,7 @@ ppo_algo_kwargs = dict(
     ),
     stop_entropy_gradient=False,
     entropy_method='regularized',
-    policy_ent_coeff=1e-5,
+    policy_ent_coeff=1e-3,
     center_adv=True,
 )
 

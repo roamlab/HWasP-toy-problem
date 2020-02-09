@@ -4,31 +4,24 @@ import tensorflow as tf
 from garage.tf.policies.base import StochasticPolicy
 from garage.tf.distributions.diagonal_gaussian import DiagonalGaussian
 
-from shared_params import params
 
-class CompMechPolicy_OptK_HwAsAction(StochasticPolicy):
+class CompMechPolicy_OptK_HwAsPolicyAndAction(StochasticPolicy):
     def __init__(self, 
                 env_spec,
-                comp_policy_model,
-                mech_policy_model,
+                comp_mech_policy_model,
                 name='comp_mech_policy_opt_k_hw_as_action'
                 ):
         super().__init__(name, env_spec)
-        self.comp_policy_model = comp_policy_model
-        self.mech_policy_model = mech_policy_model
+        self.comp_mech_policy_model = comp_mech_policy_model
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.flat_dim
         self._initialize()
 
     def _initialize(self):
         y1_and_v1_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, self.obs_dim), name='y1_and_v1_ph') # obs: y1 and v1
-        y1_and_v1_ph_normalized = y1_and_v1_ph / [params.pos_range, params.half_vel_range]
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            f_ts = self.comp_policy_model.build(y1_and_v1_ph_normalized) * params.half_force_range
-            k_ts, log_std_ts = self.mech_policy_model.build(y1_and_v1_ph_normalized)
-
-            f_and_k_ts = tf.concat([f_ts, k_ts], axis=1, name='action')
+            f_and_k_ts, log_std_ts = self.comp_mech_policy_model.build(y1_and_v1_ph)
 
         self._f_policy = tf.compat.v1.get_default_session().make_callable([f_and_k_ts, log_std_ts], feed_list=[y1_and_v1_ph])
         self._dist = DiagonalGaussian(dim=self.action_dim)
@@ -50,11 +43,11 @@ class CompMechPolicy_OptK_HwAsAction(StochasticPolicy):
         '''
 
         flat_obs = self.observation_space.flatten_n(observations)
-        f_and_k_ts, log_stds = self._f_policy(flat_obs)
-        rnd = np.random.normal(size=f_and_k_ts.shape)
-        f_and_k_ts_samples = rnd * np.exp(log_stds) + f_and_k_ts
-        samples = self.action_space.unflatten_n(f_and_k_ts_samples)
-        mean = self.action_space.unflatten_n(f_and_k_ts)
+        f_and_k, log_stds = self._f_policy(flat_obs)
+        rnd = np.random.normal(size=f_and_k.shape)
+        f_and_k_samples = rnd * np.exp(log_stds) + f_and_k
+        samples = self.action_space.unflatten_n(f_and_k_samples)
+        mean = self.action_space.unflatten_n(f_and_k)
         log_stds = self.action_space.unflatten_n(log_stds)
         info = dict(mean=mean, log_std=log_stds)
         return samples, info
@@ -75,11 +68,11 @@ class CompMechPolicy_OptK_HwAsAction(StochasticPolicy):
                 distribution.
         '''
         flat_obs = self.observation_space.flatten(observation)
-        f_and_k_ts, log_std = self._f_policy([flat_obs])
-        rnd = np.random.normal(size=f_and_k_ts.shape)
-        f_and_k_ts_sample = rnd * np.exp(log_std) + f_and_k_ts
-        sample = self.action_space.unflatten(f_and_k_ts_sample[0])
-        mean = self.action_space.unflatten(f_and_k_ts[0])
+        f_and_k, log_std = self._f_policy([flat_obs])
+        rnd = np.random.normal(size=f_and_k.shape)
+        f_and_k_sample = rnd * np.exp(log_std) + f_and_k
+        sample = self.action_space.unflatten(f_and_k_sample[0])
+        mean = self.action_space.unflatten(f_and_k[0])
         log_std = self.action_space.unflatten(log_std[0])
         info = dict(mean=mean, log_std=log_std)
         return sample, info
@@ -102,13 +95,10 @@ class CompMechPolicy_OptK_HwAsAction(StochasticPolicy):
 
         :return:
         """
-        obs_var_normalized = obs_var / [params.pos_range, params.half_vel_range]
 
         with tf.compat.v1.variable_scope(self._variable_scope):
-            f_ts = self.comp_policy_model.build(obs_var_normalized, name=name) * params.half_force_range
-            k_ts, log_std_ts = self.mech_policy_model.build(obs_var_normalized, name=name)
+            f_and_k_ts, log_std_ts = self.comp_mech_policy_model.build(obs_var, name=name)
 
-            f_and_k_ts = tf.concat([f_ts, k_ts], axis=1, name='action')
 
         return dict(
             mean = f_and_k_ts,

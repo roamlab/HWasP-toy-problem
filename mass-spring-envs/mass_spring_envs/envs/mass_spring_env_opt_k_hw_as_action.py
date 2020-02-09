@@ -48,6 +48,7 @@ n_steps_per_action = params.n_steps_per_action
 
 reward_alpha = params.reward_alpha
 reward_beta = params.reward_beta
+reward_gamma = params.reward_gamma
 
 class MassSpringEnv_OptK_HwAsAction(gym.Env):
     '''
@@ -60,8 +61,10 @@ class MassSpringEnv_OptK_HwAsAction(gym.Env):
     def __init__(self):
         self.action_space = gym.spaces.Box(low=np.array([-half_force_range, k_lb]), high=np.array([half_force_range, k_ub]), dtype=np.float32) # 1st: redifined action pi, 2nd: original action f
         self.observation_space = gym.spaces.Box(low=np.array([0, -half_vel_range]), high=np.array([pos_range, half_vel_range]), dtype=np.float32) # obs y1 and v1
-        self.v1 = 0.0 # vel of both masses
-        self.y1 = 0.0
+        self.v1 = np.random.uniform(-half_vel_range, half_vel_range) # vel of both masses
+        self.y1 = np.random.uniform(0, pos_range)
+        # self.y1 = 0.0
+        # self.v1 = 0.0
         self.step_cnt = 0
 
     def step(self, action):
@@ -80,6 +83,8 @@ class MassSpringEnv_OptK_HwAsAction(gym.Env):
         done : a boolean, indicating whether the episode has ended
         info : a dictionary containing other diagnostic information from the previous action
         """
+        action = np.clip(action.copy(), self.action_space.low, self.action_space.high)
+
         f = action[0] # input force
         k = action[1] # spring stiffness
 
@@ -94,27 +99,32 @@ class MassSpringEnv_OptK_HwAsAction(gym.Env):
             self.v1 = v1_next
             self.y1 = y1_next
 
+        self.y1 = np.clip(self.y1, 0.0, pos_range)
+        self.v1 = np.clip(self.v1, -half_vel_range, half_vel_range)
+
         y2 = self.y1 + l
 
         obs = np.array([self.y1, self.v1])
 
-        reward = -reward_alpha * (y2 - h)**2 - reward_beta*f**2
+        reward = -reward_alpha * (y2 - h)**2 - reward_beta*f**2 - reward_gamma*self.v1**2
 
         done = False
         info = {}
 
         # self.step_cnt += 1
         # if self.step_cnt == 499:
-        #     print()
-        #     print('f: ', f)
-        #     print('k: ', k)
-        #     print('y2: ', y2)
-        #     print()
+            # print()
+            # print('f: ', f)
+            # print('k: ', k)
+            # print('y2: ', y2)
+            # print()
         return obs, reward, done, info
 
     def reset(self):
-        self.v1 = 0.0
-        self.y1 = 0.0
+        self.v1 = np.random.uniform(-half_vel_range, half_vel_range) # vel of both masses
+        self.y1 = np.random.uniform(0, pos_range)
+        # self.y1 = 0.0
+        # self.v1 = 0.0
         self.step_cnt = 0
         return np.array([self.y1, self.v1])
     
