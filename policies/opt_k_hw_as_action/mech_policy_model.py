@@ -82,8 +82,8 @@ class MechPolicyModel(Model):
         self.k_pre_var = parameter(
             input_var=inputs[0],
             length=1,
-            initializer=tf.constant_initializer(
-                self.k_pre_init),
+            # initializer=tf.constant_initializer(self.k_pre_init),
+            initializer=tf.random_uniform_initializer(minval=params.k_pre_init_lb, maxval=params.k_pre_init_ub),
             trainable=True,
             name='k_pre')
 
