@@ -23,7 +23,7 @@ class Test_MassSpringEnv_OptK_HwAsAction(unittest.TestCase):
 
     def setUp(self):
         # everything in setup gets re instantiated for each test function
-        self.env = MassSpringEnv_OptK_HwAsAction()
+        self.env = MassSpringEnv_OptK_HwAsAction(params)
         self.env.reset()
 
     

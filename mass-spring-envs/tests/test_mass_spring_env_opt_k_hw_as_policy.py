@@ -24,7 +24,7 @@ class Test_MassSpringEnv_OptK_HwAsPolicy(unittest.TestCase):
     def setUp(self):
         # everything in setup gets re instantiated for each test function
         # self.env = gym.make("MassSpringEnv_OptK_HwAsPolicy-v1")
-        self.env = MassSpringEnv_OptK_HwAsPolicy()
+        self.env = MassSpringEnv_OptK_HwAsPolicy(params)
         obs = self.env.reset()
 
     

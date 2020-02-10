@@ -37,14 +37,6 @@ from garage.tf.models.mlp import mlp
 
 from shared_params import params
 
-k_ub = params.k_ub
-k_lb = params.k_lb
-k_range = params.k_range
-# we use the sigmoid trick to limit the actual range of k: k = sigmoid(k_pre) * k_range + k_lb
-
-half_force_range = params.half_force_range
-
-comp_policy_network_size = params.comp_policy_network_size
 
 class CompMechPolicyModel(Model):
     '''
@@ -54,10 +46,20 @@ class CompMechPolicyModel(Model):
     This comp. graph has input: obs y1 and v1
     and output: f, k, log_std
     '''
-    def __init__(self, k_pre_init, log_std_init, name='comp_mech_policy_model'):  # k_pre means pre-sigmoid
+    def __init__(self, params, name='comp_mech_policy_model'):  # k_pre means pre-sigmoid
         super().__init__(name)
-        self.k_pre_init = np.float32(k_pre_init)
-        self.log_std_init = log_std_init
+        self.k_pre_init = np.float32(params.k_pre_init)
+        self.f_and_k_log_std_init = params.f_and_k_log_std_init
+
+        self.pos_range = params.pos_range
+        self.half_vel_range = params.half_vel_range
+        self.k_pre_init_lb = params.k_pre_init_lb
+        self.k_pre_init_ub = params.k_pre_init_ub
+        self.comp_policy_network_size = params.comp_policy_network_size
+        self.k_range = params.k_range
+        self.k_lb = params.k_lb
+        self.half_force_range = params.half_force_range
+
 
     def _build(self, *inputs, name=None):
         """
@@ -81,13 +83,13 @@ class CompMechPolicyModel(Model):
         # the inputs are y1_and_v1_ph
         y1_and_v1_ph = inputs[0]
 
-        y1_and_v1_ph_normalized = y1_and_v1_ph / [params.pos_range, params.half_vel_range]
+        y1_and_v1_ph_normalized = y1_and_v1_ph / [self.pos_range, self.half_vel_range]
 
         self.k_pre_var = parameter(
             input_var=y1_and_v1_ph,
             length=1,
             # initializer=tf.constant_initializer(self.k_pre_init),
-            initializer=tf.random_uniform_initializer(minval=params.k_pre_init_lb, maxval=params.k_pre_init_ub),
+            initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub),
             # initializer=tf.glorot_uniform_initializer(),
             trainable=True,
             name='k_pre')
@@ -96,13 +98,13 @@ class CompMechPolicyModel(Model):
 
         y1_v1_k_ts_normalized = tf.concat([y1_and_v1_ph_normalized, self.k_ts_normalized], axis=1, name='y1_v1_k')
 
-        f_ts_normalized = mlp(y1_v1_k_ts_normalized, 1, comp_policy_network_size, name='mlp', hidden_nonlinearity=tf.math.tanh, output_nonlinearity=tf.math.tanh)
+        f_ts_normalized = mlp(y1_v1_k_ts_normalized, 1, self.comp_policy_network_size, name='mlp', hidden_nonlinearity=tf.math.tanh, output_nonlinearity=tf.math.tanh)
         
-        self.k_ts = tf.math.add(self.k_ts_normalized * tf.compat.v1.constant(k_range, dtype=tf.float32, name='k_range'), 
-            tf.compat.v1.constant(k_lb, dtype=tf.float32, name='k_lb'), 
+        self.k_ts = tf.math.add(self.k_ts_normalized * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 
+            tf.compat.v1.constant(self.k_lb, dtype=tf.float32, name='k_lb'), 
             name='k')
 
-        self.f_ts = f_ts_normalized * params.half_force_range
+        self.f_ts = f_ts_normalized * self.half_force_range
         
         f_and_k_ts = tf.concat([self.f_ts, self.k_ts], axis = 1, name='f_and_k')
 
@@ -110,7 +112,7 @@ class CompMechPolicyModel(Model):
             input_var=y1_and_v1_ph,
             length=2,
             initializer=tf.constant_initializer(
-                self.log_std_init),
+                self.f_and_k_log_std_init),
             trainable=True,
             name='log_std')
         

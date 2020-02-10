@@ -41,6 +41,8 @@ f_log_std_init = np.log(f_std_init)
 k_std_init = std_range_ratio * k_range
 k_log_std_init = np.log(k_std_init)
 
+f_and_k_log_std_init = np.array([f_log_std_init, k_log_std_init])
+
 
 
 # training params

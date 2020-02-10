@@ -29,7 +29,7 @@ import argparse
 def run_task(snapshot_config, *_):
     """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
-        env = TfEnv(MassSpringEnv_OptK_HwAsAction())
+        env = TfEnv(MassSpringEnv_OptK_HwAsAction(params))
 
         zip_project(log_dir=runner._snapshotter._snapshot_dir)
 
@@ -39,7 +39,7 @@ def run_task(snapshot_config, *_):
             output_nonlinearity=tf.nn.tanh,
             )
 
-        mech_policy_model = MechPolicyModel(k_pre_init=params.k_pre_init, log_std_init=[params.f_log_std_init, params.k_log_std_init])
+        mech_policy_model = MechPolicyModel(params)
 
         policy = CompMechPolicy_OptK_HwAsAction(name='comp_mech_policy', 
                 env_spec=env.spec, 
@@ -74,8 +74,8 @@ if __name__=='__main__':
     now = datetime.now()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('seed', default=int(now.timestamp()), type=int, help='seed')
-    parser.add_argument('exp_id', default=now.strftime("%Y_%m_%d_%H_%M_%S"), help='experiment id (suffix to data directory name)')
+    parser.add_argument('--seed', default=int(now.timestamp()), type=int, help='seed')
+    parser.add_argument('--exp_id', default=now.strftime("%Y_%m_%d_%H_%M_%S"), help='experiment id (suffix to data directory name)')
 
     args = parser.parse_args()
 

@@ -33,21 +33,6 @@ import numpy as np
 
 from shared_params import params
 
-half_force_range = params.half_force_range
-pos_range = params.pos_range
-half_vel_range = params.half_vel_range
-m1 = params.m1
-m2 = params.m2
-h = params.h
-l = params.l
-g = params.g
-dt = params.dt
-n_steps_per_action = params.n_steps_per_action
-
-reward_alpha = params.reward_alpha
-reward_beta = params.reward_beta
-reward_gamma = params.reward_gamma
-
 class MassSpringEnv_OptK_HwAsPolicy(gym.Env):
     '''
     1D mass-spring toy problem.
@@ -57,13 +42,33 @@ class MassSpringEnv_OptK_HwAsPolicy(gym.Env):
     observation: y1, v1
     '''
 
-    def __init__(self):
-        self.action_space = gym.spaces.Box(low=-half_force_range, high=half_force_range, shape=(2, ), dtype=np.float32) # 1st: redifined action pi, 2nd: original action f
-        self.observation_space = gym.spaces.Box(low=np.array([0, -half_vel_range]), high=np.array([pos_range, half_vel_range]), dtype=np.float32) # obs y1 and v1
+    def __init__(self, params):
+
+        self.half_force_range = params.half_force_range
+        self.k_lb = params.k_lb
+        self.k_ub = params.k_ub
+        self.pos_range = params.pos_range
+        self.half_vel_range = params.half_vel_range
+        self.m1 = params.m1
+        self.m2 = params.m2
+        self.h = params.h
+        self.l = params.l
+        self.g = params.g
+        self.dt = params.dt
+        self.n_steps_per_action = params.n_steps_per_action
+        self.reward_alpha = params.reward_alpha
+        self.reward_beta = params.reward_beta
+        self.reward_gamma = params.reward_gamma
+
+
+        self.action_space = gym.spaces.Box(low=-self.half_force_range, high=self.half_force_range, shape=(2, ), dtype=np.float32) # 1st: redifined action pi, 2nd: original action f
+        self.observation_space = gym.spaces.Box(low=np.array([0, -self.half_vel_range]), high=np.array([self.pos_range, self.half_vel_range]), dtype=np.float32) # obs y1 and v1
+        
+        # states
         # self.v1 = 0.0 # vel of both masses
         # self.y1 = 0.0
-        self.v1 = np.random.uniform(-half_vel_range, half_vel_range) # vel of both masses
-        self.y1 = np.random.uniform(0, pos_range)
+        self.v1 = np.random.uniform(-self.half_vel_range, self.half_vel_range) # vel of both masses
+        self.y1 = np.random.uniform(0, self.pos_range)
         self.step_cnt = 0
 
     def step(self, action):
@@ -90,35 +95,34 @@ class MassSpringEnv_OptK_HwAsPolicy(gym.Env):
 
 
 
-        f_total = pi + (m1+ m2) * g
-        a = f_total / (m1+ m2)
+        f_total = pi + (self.m1 + self.m2) * self.g
+        a = f_total / (self.m1 + self.m2)
 
-        for _ in range(n_steps_per_action):
-            # self.v1 = self.v1 + a * dt # simple Euler integration
-            # self.y1 = self.y1 + self.v1 * dt
+        for _ in range(self.n_steps_per_action):
+            # self.v1 = self.v1 + a * self.dt # simple Euler integration
+            # self.y1 = self.y1 + self.v1 * self.dt
 
             v1_curr = self.v1
             y1_curr = self.y1
-            v1_next = v1_curr + a * dt
-            y1_next = y1_curr + v1_curr * dt  + 0.5 * a * dt**2 # mid-point Euler integration
+            v1_next = v1_curr + a * self.dt
+            y1_next = y1_curr + v1_curr * self.dt  + 0.5 * a * self.dt**2 # mid-point Euler integration
             self.v1 = v1_next
             self.y1 = y1_next
 
-        self.y1 = np.clip(self.y1, 0.0, pos_range)
-        self.v1 = np.clip(self.v1, -half_vel_range, half_vel_range)
+        self.y1 = np.clip(self.y1, 0.0, self.pos_range)
+        self.v1 = np.clip(self.v1, -self.half_vel_range, self.half_vel_range)
 
-        y2 = self.y1 + l
+        y2 = self.y1 + self.l
 
         obs = np.array([self.y1, self.v1])
 
-        reward = -reward_alpha * (y2 - h)**2 - reward_beta*f**2 - reward_gamma*self.v1**2
+        reward = -self.reward_alpha * (y2 - self.h)**2 - self.reward_beta*f**2 - self.reward_gamma*self.v1**2
 
         done = False
         info = {}
 
         # self.step_cnt += 1
         # if self.step_cnt == 499:
-        #     reward = reward - 100 * (y2 - h)**2
         #     print()
         #     print('pi: ', pi)
         #     print('f: ', f)
@@ -129,8 +133,8 @@ class MassSpringEnv_OptK_HwAsPolicy(gym.Env):
     def reset(self):
         # self.v1 = 0.0
         # self.y1 = 0.0
-        self.v1 = np.random.uniform(-half_vel_range, half_vel_range) # vel of both masses
-        self.y1 = np.random.uniform(0, pos_range)
+        self.v1 = np.random.uniform(-self.half_vel_range, self.half_vel_range) # vel of both masses
+        self.y1 = np.random.uniform(0, self.pos_range)
         self.step_cnt = 0
         return np.array([self.y1, self.v1])
     

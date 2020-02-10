@@ -54,10 +54,16 @@ class MechPolicyModel(Model):
     This comp. graph takes in the output of comp. policy f, and the state y1,
     and output the overall action pi, and additional information for reward calculation
     '''
-    def __init__(self, k_pre_init, log_std_init, name='mech_policy_model'):  # k_pre means pre-sigmoid
+    def __init__(self, params, name='mech_policy_model'):  # k_pre means pre-sigmoid
         super().__init__(name)
-        self.k_pre_init = np.float32(k_pre_init)
-        self.log_std_init = log_std_init
+        self.k_pre_init = np.float32(params.k_pre_init)
+        self.f_log_std_init = params.f_log_std_init
+
+        self.half_force_range = params.half_force_range
+        self.k_pre_init_lb = params.k_pre_init_lb
+        self.k_pre_init_ub = params.k_pre_init_ub
+        self.k_range = params.k_range
+        self.k_lb = params.k_lb
 
     def _build(self, *inputs, name=None):
         """
@@ -78,18 +84,18 @@ class MechPolicyModel(Model):
             output: Tensor output(s) of the model.
         """
         f_ph, y1_and_v1_ph = inputs[0] # f_ph: (?, 1), y1_and_v1_ph: (?, 2)
-        f_ph = tf.multiply(f_ph, tf.compat.v1.constant(half_force_range, dtype=tf.float32, name='half_force_range')) # all these multiply() are scalar-tensor multiplication
+        f_ph = tf.multiply(f_ph, tf.compat.v1.constant(self.half_force_range, dtype=tf.float32, name='half_force_range')) # all these multiply() are scalar-tensor multiplication
         y1_ph = y1_and_v1_ph[:, 0:1]
         # self.k_pre_var = tf.compat.v1.get_variable('k_pre', initializer=self.k_pre_init, dtype=tf.float32, trainable=True)
-        k_pre_init = np.random.uniform(k_pre_init_lb, k_pre_init_ub)
+        k_pre_init = np.random.uniform(self.k_pre_init_lb, self.k_pre_init_ub)
         self.k_pre_var = tf.compat.v1.get_variable(
             'k_pre', 
             initializer=k_pre_init, 
             dtype=tf.float32, 
             trainable=True)
 
-        self.k_ts = tf.math.add(tf.nn.sigmoid(self.k_pre_var) * tf.compat.v1.constant(k_range, dtype=tf.float32, name='k_range'), 
-            tf.compat.v1.constant(k_lb, dtype=tf.float32, name='k_lb'), 
+        self.k_ts = tf.math.add(tf.nn.sigmoid(self.k_pre_var) * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 
+            tf.compat.v1.constant(self.k_lb, dtype=tf.float32, name='k_lb'), 
             name='k')
         f_spring_ts = tf.multiply(-y1_ph, self.k_ts, name='f_spring')
 
@@ -100,7 +106,7 @@ class MechPolicyModel(Model):
             input_var=y1_ph, # actually not linked to the input, this is just to match the dimension of the inputs for batches
             length=2,
             initializer=tf.constant_initializer(
-                self.log_std_init),
+                self.f_log_std_init),
             trainable=True,
             name='log_std')
 

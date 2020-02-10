@@ -36,13 +36,6 @@ from garage.tf.models.parameter import parameter
 
 from shared_params import params
 
-k_ub = params.k_ub
-k_lb = params.k_lb
-k_range = params.k_range
-# we use the sigmoid trick to limit the actual range of k: k = sigmoid(k_pre) * k_range + k_lb
-
-half_force_range = params.half_force_range
-
 
 class MechPolicyModel(Model):
     '''
@@ -52,10 +45,15 @@ class MechPolicyModel(Model):
     This comp. graph do not have inputs, 
     and output the overall action pi, and additional information for reward calculation
     '''
-    def __init__(self, k_pre_init, log_std_init, name='mech_policy_model'):  # k_pre means pre-sigmoid
+    def __init__(self, params, name='mech_policy_model'):  # k_pre means pre-sigmoid
         super().__init__(name)
-        self.k_pre_init = np.float32(k_pre_init)
-        self.log_std_init = log_std_init
+        self.k_pre_init = np.float32(params.k_pre_init)
+        self.f_and_k_log_std_init = params.f_and_k_log_std_init
+
+        self.k_pre_init_lb = params.k_pre_init_lb
+        self.k_pre_init_ub = params.k_pre_init_ub
+        self.k_range = params.k_range 
+        self.k_lb = params.k_lb
 
     def _build(self, *inputs, name=None):
         """
@@ -83,19 +81,19 @@ class MechPolicyModel(Model):
             input_var=inputs[0],
             length=1,
             # initializer=tf.constant_initializer(self.k_pre_init),
-            initializer=tf.random_uniform_initializer(minval=params.k_pre_init_lb, maxval=params.k_pre_init_ub),
+            initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub),
             trainable=True,
             name='k_pre')
 
-        self.k_ts = tf.math.add(tf.math.sigmoid(self.k_pre_var) * tf.compat.v1.constant(k_range, dtype=tf.float32, name='k_range'), 
-            tf.compat.v1.constant(k_lb, dtype=tf.float32, name='k_lb'), 
+        self.k_ts = tf.math.add(tf.math.sigmoid(self.k_pre_var) * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 
+            tf.compat.v1.constant(self.k_lb, dtype=tf.float32, name='k_lb'), 
             name='k')
 
         self.log_std_var = parameter(
             input_var=inputs[0],
             length=2,
             initializer=tf.constant_initializer(
-                self.log_std_init),
+                self.f_and_k_log_std_init),
             trainable=True,
             name='log_std')
         

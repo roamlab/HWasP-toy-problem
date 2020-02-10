@@ -17,7 +17,6 @@ import gym
 from mass_spring_envs.envs import MassSpringEnv_OptK_HwAsAction
 
 from shared_params import params
-from shared_params.params import inv_sigmoid
 
 class TestPolicy_OptK_HwAsPolicy(unittest.TestCase):
     @classmethod
@@ -44,15 +43,15 @@ class TestPolicy_OptK_HwAsPolicy(unittest.TestCase):
         y1 = 0.1
         v1 = 0.0
 
-        comp_mech_policy_model = CompMechPolicyModel(name='test_comp_mech_policy_model', k_pre_init=params.k_pre_init, log_std_init=[params.f_log_std_init, params.k_log_std_init])
+        comp_mech_policy_model = CompMechPolicyModel(name='test_comp_mech_policy_model', params=params)
 
         with tf.compat.v1.Session() as sess:
             y1_and_v1_ph = tf.compat.v1.placeholder(shape=(None, 2), dtype=tf.float32)
             f_and_k_ts, log_std = comp_mech_policy_model.build(y1_and_v1_ph)
             output = sess.run([f_and_k_ts, log_std], feed_dict={y1_and_v1_ph: [[y1, v1]]})
             print(output)
-            self.assertAlmostEqual(output[1][0][0], params.f_log_std_init)
-            self.assertAlmostEqual(output[1][0][1], params.k_log_std_init)
+            self.assertAlmostEqual(output[1][0][0], params.f_log_std_init, places=3)
+            self.assertAlmostEqual(output[1][0][1], params.k_log_std_init, places=3)
 
 
 
@@ -60,9 +59,9 @@ class TestPolicy_OptK_HwAsPolicy(unittest.TestCase):
         y1 = 0.1
         v1 = 0.1
 
-        env = TfEnv(MassSpringEnv_OptK_HwAsAction())
+        env = TfEnv(MassSpringEnv_OptK_HwAsAction(params))
 
-        comp_mech_policy_model = CompMechPolicyModel(k_pre_init=params.k_pre_init, log_std_init=[params.f_log_std_init, params.k_log_std_init])
+        comp_mech_policy_model = CompMechPolicyModel(params)
 
         with tf.compat.v1.Session() as sess:        
             comp_mech_policy = CompMechPolicy_OptK_HwAsPolicyAndAction(name='test_comp_mech_policy', 
