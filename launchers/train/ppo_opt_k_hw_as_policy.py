@@ -15,9 +15,9 @@ from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.models import MLPModel
 
-from mass_spring_envs.envs.mass_spring_env_opt_k_hw_as_policy import MassSpringEnv_OptK_HwAsPolicy
-from policies.opt_k_hw_as_policy.mech_policy_model import MechPolicyModel
-from policies.opt_k_hw_as_policy.comp_mech_policy import CompMechPolicy_OptK_HwAsPolicy
+from mass_spring_envs.envs.mass_spring_env_opt_k import MassSpringEnv_OptK_HwAsPolicy
+from policies.opt_k.models import MechPolicyModel_OptK_HwAsPolicy
+from policies.opt_k.policies import CompMechPolicy_OptK_HwAsPolicy
 
 from shared_params import params
 
@@ -41,7 +41,7 @@ def run_task(snapshot_config, *_):
             hidden_nonlinearity=tf.nn.tanh,
             output_nonlinearity=tf.nn.tanh)
 
-        mech_policy_model = MechPolicyModel(params)
+        mech_policy_model = MechPolicyModel_OptK_HwAsPolicy(params)
 
         policy = CompMechPolicy_OptK_HwAsPolicy(name='comp_mech_policy', 
                 env_spec=env.spec, 

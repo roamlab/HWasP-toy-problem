@@ -15,9 +15,9 @@ from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.models.mlp_model import MLPModel
 
-from mass_spring_envs.envs.mass_spring_env_opt_k_hw_as_action import MassSpringEnv_OptK_HwAsAction # still use this env since action and obs are same as case "opt_k_hw_as_action"
-from policies.opt_k_hw_as_policy_and_action.comp_mech_policy_model import CompMechPolicyModel
-from policies.opt_k_hw_as_policy_and_action.comp_mech_policy import CompMechPolicy_OptK_HwAsPolicyAndAction
+from mass_spring_envs.envs.mass_spring_env_opt_k import MassSpringEnv_OptK_HwAsAction # still use this env since action and obs are same as case "opt_k_hw_as_action"
+from policies.opt_k.models import CompMechPolicyModel_OptK_HwInPolicyAndAction
+from policies.opt_k.policies import CompMechPolicy_OptK_HwInPolicyAndAction
 
 from shared_params import params
 from launchers.utils.zip_project import zip_project
@@ -35,9 +35,9 @@ def run_task(snapshot_config, *_):
 
         env = TfEnv(MassSpringEnv_OptK_HwAsAction(params))
 
-        comp_mech_policy_model = CompMechPolicyModel(params)
+        comp_mech_policy_model = CompMechPolicyModel_OptK_HwInPolicyAndAction(params)
 
-        policy = CompMechPolicy_OptK_HwAsPolicyAndAction(name='comp_mech_policy', 
+        policy = CompMechPolicy_OptK_HwInPolicyAndAction(name='comp_mech_policy', 
                 env_spec=env.spec, 
                 comp_mech_policy_model=comp_mech_policy_model)
 
@@ -74,4 +74,4 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
-    run_experiment(run_task, exp_prefix='ppo_opt_k_hw_as_policy_and_action_{}'.format(args.exp_id), snapshot_mode='last', seed=args.seed, force_cpu=True)
+    run_experiment(run_task, exp_prefix='ppo_opt_k_hw_in_policy_and_action_{}'.format(args.exp_id), snapshot_mode='last', seed=args.seed, force_cpu=True)

@@ -7,7 +7,7 @@ function run_exps_in_terminal()
 {
     for (( run_id=0; run_id<$n_runs_each_terminal; run_id++ ))
     do
-        python launchers/train/ppo_opt_k_hw_as_policy_and_action.py --seed=$(( $1*$n_terminals+$run_id )) --exp_id=$datetime
+        python launchers/train/ppo_opt_k_hw_in_policy_and_action.py --seed=$(( $1*$n_terminals+$run_id )) --exp_id=$datetime
     done
 }
 
