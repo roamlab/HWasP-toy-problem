@@ -28,10 +28,10 @@ The 1D mass-spring toy problem of hardware-software co-optimization using RL
 ```
 Problem statement:
 - Input to the system: a force f on m2
-- Goal: optimize the computational policy f and the mechanical structure to drag m2 to the goal point with minimum effort,
+- Goal: optimize the computational policy f and the mechanical structure to drag m2 to the goal point and stay there with minimum effort,
 i.e. reward is: 
 ```
--alpha*(y2-h)**2 - beta*f**2
+-alpha*(y2-h)**2 - beta*f**2 - gamma*v2**2
 ``` 
 - 3 optimization cases: optimize for
     - comp. policy and spring stiffness k
@@ -39,7 +39,8 @@ i.e. reward is:
     - comp. policy and bar length l
 
 This repo includes:
-- launchers: garage launchers
+- launchers: garage launchers for training and replay
 - mass-spring-envs: the gym environments for the mass-spring system with different optimization goals
 - policies: the computational graphs and garage policies
-- policy_players: replay the trained policy and plot the observations and actions
+- scripts: the bash scripts to start launchers in different terminals in parallel
+- shared_params: the files containing all parameters for this project (a centralized way of parameter management)
