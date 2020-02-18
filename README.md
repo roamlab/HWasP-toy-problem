@@ -2,12 +2,12 @@
 The 1D mass-spring toy problem of hardware-software co-optimization using RL
 ```
         --------------
-        ^      \
-        |       \
-        |       /  spring, stiffness k, masless, zero natural length 
-        |      /
-        |      \
-        |       \
+        ^    \    \
+        |     \    \
+        |     / .. /  springs, stiffness k1, k2 ..., masless, zero natural length 
+        |    /    /
+        |    \    \
+        |     \    \
         |    +-----+
         |    |     |
         |    |     |  point mass m1, position y1
@@ -28,10 +28,19 @@ The 1D mass-spring toy problem of hardware-software co-optimization using RL
 ```
 Problem statement:
 - Input to the system: a force f on m2
-- Goal: optimize the computational policy f and the mechanical structure to drag m2 to the goal point and stay there with minimum effort,
+- Goal: optimize the computational policy f and the mechanical structure to:
+    - Primary goal: drag m2 to the goal point and stay there 
+    - Secondary goal: with minimum effort,
 i.e. reward is: 
 ```
--alpha*(y2-h)**2 - beta*f**2 - gamma*v2**2
+pos_penalty = alpha*abs(y2-h)
+vel_penalty = beta*abs(v2)
+force_penalty = gamma*abs(f)
+
+if pos_penalty + vel_penalty > threshold: # meaning the primary goal is not achieved yet
+    reward = -pos_penalty - vel_penalty - a_large_force_penalty
+else: # meaning the primary goal is achieved
+    reward = -pos_penalty - vel_penalty - force_penalty
 ``` 
 - 3 optimization cases: optimize for
     - comp. policy and spring stiffness k
@@ -44,3 +53,10 @@ This repo includes:
 - policies: the computational graphs and garage policies
 - scripts: the bash scripts to start launchers in different terminals in parallel
 - shared_params: the files containing all parameters for this project (a centralized way of parameter management)
+
+To run, you need:
+- tensorflow
+- numpy
+- garage
+- gym
+- install the mass-spring-envs
