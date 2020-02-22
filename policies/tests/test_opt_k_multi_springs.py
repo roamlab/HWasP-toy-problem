@@ -57,7 +57,7 @@ class TestPolicy_OptK_MultiSprings_HwAsAction(unittest.TestCase):
             k_ts, log_std = mech_policy_model.build(y1_and_v1_ph)
             output = sess.run([k_ts, log_std], feed_dict={y1_and_v1_ph: [[y1, v1]]})
             print(output)
-            self.assertTrue(np.allclose(output[1][0], np.array([params.f_log_std_init] + [params.k_log_std_init,] * params.n_springs), atol=1e-3))
+            self.assertTrue(np.allclose(output[1][0], np.array([params.f_log_std_init_action] + [params.k_log_std_init_action,] * params.n_springs), atol=1e-3))
 
 
     def test_comp_mech_policy(self):
@@ -85,12 +85,12 @@ class TestPolicy_OptK_MultiSprings_HwAsAction(unittest.TestCase):
             actions = comp_mech_policy.get_actions([[y1, v1]])
             print('actions: ', actions)
             # self.assertTrue(np.allclose(actions[1]['mean'], np.array([[0.0, params.k_init]])))
-            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init] + [params.k_log_std_init,] * params.n_springs]), atol=1e-3))
+            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init_action] + [params.k_log_std_init_action,] * params.n_springs]), atol=1e-3))
 
             action = comp_mech_policy.get_action([y1, v1])
             print('single action: ', action)
             # self.assertTrue(np.allclose(actions[1]['mean'], np.array([0.0, params.k_init])))
-            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init] + [params.k_log_std_init,] * params.n_springs]), atol=1e-3))
+            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init_action] + [params.k_log_std_init_action,] * params.n_springs]), atol=1e-3))
             
             print(comp_mech_policy.distribution)
 
@@ -130,11 +130,11 @@ class TestPolicy_OptK_MultiSprings_HwAsPolicy(unittest.TestCase):
             f_ph = tf.compat.v1.placeholder(shape=(None, 1), dtype=tf.float32)
             y1_and_v1_ph = tf.compat.v1.placeholder(shape=(None, 2), dtype=tf.float32)
             pi_and_f_ts, log_std = mech_policy_model.build([f_ph, y1_and_v1_ph])
-            output = sess.run(pi_and_f_ts, feed_dict={f_ph: [[f_normalized]], y1_and_v1_ph: [[y1, v1]]})
+            output = sess.run([pi_and_f_ts, log_std], feed_dict={f_ph: [[f_normalized]], y1_and_v1_ph: [[y1, v1]]})
             print(output)
-
-            # self.assertAlmostEqual(output[0][0], params.half_force_range*f_normalized-params.n_springs * params.k_init*y1)
-            self.assertAlmostEqual(output[0][1], params.half_force_range*f_normalized)
+            # self.assertAlmostEqual(output[0][0][0], params.half_force_range*f_normalized-params.n_springs * params.k_init*y1)
+            self.assertAlmostEqual(output[0][0][1], params.half_force_range*f_normalized)
+            self.assertAlmostEqual(output[1][0][1], params.f_log_std_init_auxiliary)
 
 
     def test_comp_mech_policy(self):        
@@ -161,13 +161,13 @@ class TestPolicy_OptK_MultiSprings_HwAsPolicy(unittest.TestCase):
             actions = comp_mech_policy.get_actions([[y1, v1]])
             print('actions: ', actions)
             # self.assertTrue(np.allclose(actions[1]['mean'], np.array([[params.half_force_range*0-params.k_init*y1, 0.0]])))
-            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init, params.f_log_std_init]])))
+            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init_action, params.f_log_std_init_auxiliary]])))
 
 
             action = comp_mech_policy.get_action([y1, v1])
             print('single action: ', action)
             # self.assertTrue(np.allclose(action[1]['mean'], np.array([params.half_force_range*0-params.k_init*y1, 0.0])))
-            self.assertTrue(np.allclose(action[1]['log_std'], np.array([params.f_log_std_init, params.f_log_std_init])))
+            self.assertTrue(np.allclose(action[1]['log_std'], np.array([params.f_log_std_init_action, params.f_log_std_init_auxiliary])))
             
             print(comp_mech_policy.distribution)
 
@@ -205,8 +205,8 @@ class TestPolicy_OptK_MultiSprings_HwInPolicyAndAction(unittest.TestCase):
             f_and_k_ts, log_std = comp_mech_policy_model.build(y1_and_v1_ph)
             output = sess.run([f_and_k_ts, log_std], feed_dict={y1_and_v1_ph: [[y1, v1]]})
             print(output)
-            self.assertAlmostEqual(output[1][0][0], params.f_log_std_init, places=3)
-            self.assertAlmostEqual(output[1][0][1], params.k_log_std_init, places=3)
+            self.assertAlmostEqual(output[1][0][0], params.f_log_std_init_action, places=3)
+            self.assertAlmostEqual(output[1][0][1], params.k_log_std_init_auxiliary, places=3)
 
 
     def test_comp_mech_policy(self):
@@ -225,11 +225,11 @@ class TestPolicy_OptK_MultiSprings_HwInPolicyAndAction(unittest.TestCase):
 
             actions = comp_mech_policy.get_actions([[y1, v1]])
             print('actions: ', actions)
-            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init,] + [params.k_log_std_init,] * params.n_springs])))
+            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([[params.f_log_std_init_action,] + [params.k_log_std_init_auxiliary,] * params.n_springs])))
 
             action = comp_mech_policy.get_action([y1, v1])
             print('single action: ', action)
-            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([params.f_log_std_init,] + [params.k_log_std_init,] * params.n_springs)))
+            self.assertTrue(np.allclose(actions[1]['log_std'], np.array([params.f_log_std_init_action,] + [params.k_log_std_init_auxiliary,] * params.n_springs)))
             
             print(comp_mech_policy.distribution)
 

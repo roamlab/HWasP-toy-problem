@@ -15,7 +15,7 @@ dt = 0.002
 n_steps_per_action = 5
 n_steps_per_episode = 1000
 
-n_springs = 50 # for multi-spring cases
+n_springs = 1 # for multi-spring cases
 
 reward_alpha = 10.0
 reward_beta = 0.5
@@ -38,13 +38,18 @@ k_pre_init_lb = -5
 k_pre_init_ub = 5
 
 # init stds
-std_range_ratio = 0.3
+std_range_ratio_action = 0.3
+std_range_ratio_auxiliary = 0.3
 
-f_std_init = std_range_ratio * (half_force_range * 2)
-f_log_std_init = np.log(f_std_init)
-k_std_init = std_range_ratio * k_range
-k_log_std_init = np.log(k_std_init)
+f_std_init_action = std_range_ratio_action * (half_force_range * 2)
+f_log_std_init_action = np.log(f_std_init_action)
+k_std_init_action = std_range_ratio_action * k_range
+k_log_std_init_action = np.log(k_std_init_action)
 
+f_std_init_auxiliary = std_range_ratio_auxiliary * (half_force_range * 2)
+f_log_std_init_auxiliary = np.log(f_std_init_auxiliary)
+k_std_init_auxiliary = std_range_ratio_auxiliary * k_range
+k_log_std_init_auxiliary = np.log(k_std_init_auxiliary)
 
 # learning params
 comp_policy_network_size = (32, 32)

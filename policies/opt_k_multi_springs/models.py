@@ -85,7 +85,7 @@ class MyBaseModel_OptK_MultiSprings(Model):
 class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings):
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
-        self.f_and_k_log_std_init = [params.f_log_std_init,] + [params.k_log_std_init,] * params.n_springs
+        self.f_and_k_log_std_init = [params.f_log_std_init_action,] + [params.k_log_std_init_action,] * params.n_springs
 
     def _build(self, *inputs, name=None):
         """
@@ -142,8 +142,11 @@ class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings
         return ['k', 'log_std']
 
 
-    def get_mech_params(self):
-        return [self.k_pre_var, self.k_ts, self.k_sum_ts, self.log_std_var]
+    def get_tensors(self):
+        return dict(k_pre_var=self.k_pre_var, 
+                    k_ts=self.k_ts, 
+                    k_sum_ts=self.k_sum_ts, 
+                    log_std_var=self.log_std_var)
 
 
     def __getstate__(self):
@@ -162,7 +165,7 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
 
-        self.f_log_std_init = params.f_log_std_init
+        self.pi_and_f_log_std_init = [params.f_log_std_init_action, params.f_log_std_init_auxiliary]
         self.half_force_range = params.half_force_range
 
 
@@ -185,7 +188,7 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
             output: Tensor output(s) of the model.
         """
         f_ph_normalized, y1_and_v1_ph = inputs[0] # f_ph_normalized: (?, 1), y1_and_v1_ph: (?, 2)
-        f_ph = tf.multiply(f_ph_normalized[:, 0], tf.compat.v1.constant(self.half_force_range, dtype=tf.float32, name='half_force_range')) # scalar-tensor multiplication # f_ph: (?,)
+        f_ts = tf.multiply(f_ph_normalized[:, 0], tf.compat.v1.constant(self.half_force_range, dtype=tf.float32, name='half_force_range'), name='f') # scalar-tensor multiplication # f_ts: (?,)
         y1_ph = y1_and_v1_ph[:, 0] # y1_ph: (?,) 
         # self.k_pre_var = tf.compat.v1.get_variable('k_pre', initializer=[self.k_pre_init,] * self.n_springs, dtype=tf.float32, trainable=True)
         k_pre_init = np.float32(np.random.uniform(self.k_pre_init_lb, self.k_pre_init_ub, size=(self.n_springs,)))
@@ -203,20 +206,25 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
         # y1_mat: (?, self.n_springs), [[y1[1], y1[1], ...], ...[y1[?], y1[?], ...]]
         f_spring_ts = -tf.linalg.matvec(y1_mat, self.k_ts, name='f_spring')
         #  f_spring_ts: (?,), -[y1[1]*k[1]+y1[1]*k[2]+... , ... , y1[?]*k[1]+y1[?]*k[2]+...]
-        pi_ts = tf.add(f_ph, f_spring_ts, name='pi') # pi_ts (?,)
+        pi_ts = tf.add(f_ts, f_spring_ts, name='pi') # pi_ts (?,)
+
+        # f_ts_stop_grad = tf.compat.v1.stop_gradient(f_ts) # we should not stop gradient, but should see k as an actual action with the ability to backprop
+
+        # pi_and_f_ts = tf.concat([tf.expand_dims(pi_ts, axis=-1), tf.expand_dims(f_ts, axis=-1)], axis=1) 
+        pi_and_f_ts = tf.stack([pi_ts, f_ts], axis=1, name='pi_and_f') # pi_and_f_ts: (?, 2)
+
+        self.debug_ts = tf.gradients(tf.log(pi_and_f_ts), self.k_pre_var)
 
         self.log_std_var = parameter(
-            input_var=y1_ph, # actually not linked to the input, this is just to match the dimension of the inputs for batches
+            input_var=y1_and_v1_ph, # actually not linked to the input, this is just to match the dimension of the inputs for batches
             length=2,
             initializer=tf.constant_initializer(
-                self.f_log_std_init),
+                self.pi_and_f_log_std_init),
             trainable=True,
             name='log_std') 
             # shape: (?, 2)
 
-        output_ts = tf.stack([pi_ts, f_ph], axis=1, name='pi_and_f') # output_ts: (?, 2)
-
-        return output_ts, self.log_std_var # always see the combo (of pi and f) as the action
+        return pi_and_f_ts, self.log_std_var # always see the combo (of pi and f) as the action
 
 
     def network_output_spec(self):
@@ -229,8 +237,12 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
         return ['pi_and_f', 'log_std']
 
 
-    def get_mech_params(self):
-        return [self.k_pre_var, self.k_ts, self.k_sum_ts, self.log_std_var]
+    def get_tensors(self):
+        return dict(k_pre_var=self.k_pre_var, 
+                    k_ts=self.k_ts, 
+                    k_sum_ts=self.k_sum_ts, 
+                    log_std_var=self.log_std_var,
+                    debug_ts=self.debug_ts)
 
 
     def __getstate__(self):
@@ -240,6 +252,7 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
         del new_dict['k_ts']
         del new_dict['k_sum_ts']
         del new_dict['log_std_var']
+        del new_dict['debug_ts']
         return new_dict
 
 
@@ -250,7 +263,7 @@ class CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(MyBaseModel_OptK
         super().__init__(params, name=name)
         from garage.tf.models.mlp import mlp
 
-        self.f_and_k_log_std_init = [params.f_log_std_init,] +  [params.k_log_std_init,] * self.n_springs
+        self.f_and_k_log_std_init = [params.f_log_std_init_action,] +  [params.k_log_std_init_auxiliary,] * self.n_springs
         self.pos_range = params.pos_range
         self.half_vel_range = params.half_vel_range
         self.comp_policy_network_size = params.comp_policy_network_size
@@ -296,13 +309,17 @@ class CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(MyBaseModel_OptK
 
         f_ts_normalized = mlp(y1_v1_k_ts_normalized, 1, self.comp_policy_network_size, name='mlp', hidden_nonlinearity=tf.math.tanh, output_nonlinearity=tf.math.tanh)
         
+        self.f_ts = f_ts_normalized * self.half_force_range
+
         self.k_ts = tf.math.add(self.k_ts_normalized * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 
             tf.compat.v1.constant(self.k_lb, dtype=tf.float32, name='k_lb'), 
             name='k')
 
-        self.f_ts = f_ts_normalized * self.half_force_range
-        
+        # k_ts_stop_grad = tf.stop_gradient(self.k_ts) # we should not stop gradient, but should see k as an actual action,
+
         f_and_k_ts = tf.concat([self.f_ts, self.k_ts], axis = 1, name='f_and_k')
+
+        self.debug_ts = tf.gradients(f_and_k_ts, self.k_pre_var)
 
         self.log_std_var = parameter(
             input_var=y1_and_v1_ph,
@@ -325,8 +342,10 @@ class CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(MyBaseModel_OptK
         return ['f_and_k', 'log_std']
 
 
-    def get_mech_params(self):
-        return [self.k_ts, self.log_std_var]
+    def get_tensors(self):
+        return dict(k_ts=self.k_ts, 
+                    log_std_var=self.log_std_var,
+                    debug_ts=self.debug_ts)
 
 
     def __getstate__(self):
@@ -336,5 +355,6 @@ class CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(MyBaseModel_OptK
         del new_dict['k_ts_normalized']
         del new_dict['k_ts']
         del new_dict['f_ts']
+        del new_dict['debug_ts']
         del new_dict['log_std_var']
         return new_dict

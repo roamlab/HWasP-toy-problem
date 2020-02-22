@@ -17,7 +17,7 @@ class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
 
 
     def _initialize(self):
-        # subclasses need to define the callable self._f_policy
+        # subclasses need to define the callable self._policy_callable
         raise NotImplementedError
 
 
@@ -36,7 +36,7 @@ class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
                 distribution.
         '''
         flat_obs = self.observation_space.flatten_n(observations)
-        means, log_stds = self._f_policy(flat_obs)
+        means, log_stds = self._policy_callable(flat_obs)
         rnd = np.random.normal(size=means.shape)
         samples = rnd * np.exp(log_stds) + means
         samples = self.action_space.unflatten_n(samples)
@@ -61,7 +61,7 @@ class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
                 distribution.
         '''
         flat_obs = self.observation_space.flatten(observation)
-        mean, log_std = self._f_policy([flat_obs])
+        mean, log_std = self._policy_callable([flat_obs])
         rnd = np.random.normal(size=mean.shape)
         sample = rnd * np.exp(log_std) + mean
         sample = self.action_space.unflatten(sample[0])
@@ -111,7 +111,7 @@ class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
     def __getstate__(self):
         """Object.__getstate__."""
         new_dict = super().__getstate__()
-        del new_dict['_f_policy']
+        del new_dict['_policy_callable']
         return new_dict
 
 
@@ -151,7 +151,7 @@ class CompMechPolicy_OptK_MultiSprings_HwAsAction(MyBasePolicy_OptK_MultiSprings
 
             f_and_k_ts = tf.concat([f_ts, k_ts], axis=1, name='action')
 
-        self._f_policy = tf.compat.v1.get_default_session().make_callable([f_and_k_ts, log_std_ts], feed_list=[y1_and_v1_ph])
+        self._policy_callable = tf.compat.v1.get_default_session().make_callable([f_and_k_ts, log_std_ts], feed_list=[y1_and_v1_ph])
 
 
     def dist_info_sym(self, obs_var, state_info_vars, name='default'):
@@ -183,58 +183,19 @@ class CompMechPolicy_OptK_MultiSprings_HwAsAction(MyBasePolicy_OptK_MultiSprings
 
 
     def get_actions(self, observations):
-        '''
-        Get multiple actions from this policy for the input observations.
-        Args:
-            observations (numpy.ndarray): Observations from environment.
-        Returns:
-            numpy.ndarray: Actions
-            dict: Predicted action and agent information.
-        Note:
-            It returns actions and a dict, with keys
-            - mean (numpy.ndarray): Means of the distribution.
-            - log_std (numpy.ndarray): Log standard deviations of the
-                distribution.
-        '''
-        flat_obs = self.observation_space.flatten_n(observations)
-        means, log_stds = self._f_policy(flat_obs)
-        rnd = np.random.normal(size=means.shape)
-        samples = rnd * np.exp(log_stds) + means
-        samples = self.action_space.unflatten_n(samples)
-        means = self.action_space.unflatten_n(means)
-        log_stds = self.action_space.unflatten_n(log_stds)
+        samples, info = super().get_actions(observations)
+        means = info['mean']
         k_sum = np.sum(means[:, 1:], axis=1) # the first one in mean is f, all others are k's
-        info = dict(mean=means, log_std=log_stds, k_sum=k_sum)
+        info['k'] = k_sum
         return samples, info
 
 
     def get_action(self, observation):
-        '''
-        Get single action from this policy for the input observation.
-        Args:
-            observation (numpy.ndarray): Observation from environment.
-        Returns:
-            numpy.ndarray: Actions
-            dict: Predicted action and agent information.
-        Note:
-            It returns an action and a dict, with keys
-            - mean (numpy.ndarray): Mean of the distribution.
-            - log_std (numpy.ndarray): Log standard deviation of the
-                distribution.
-        '''
-        flat_obs = self.observation_space.flatten(observation)
-        mean, log_std = self._f_policy([flat_obs])
-        rnd = np.random.normal(size=mean.shape)
-        sample = rnd * np.exp(log_std) + mean
-        sample = self.action_space.unflatten(sample[0])
-        mean = self.action_space.unflatten(mean[0])
-        log_std = self.action_space.unflatten(log_std[0])
+        sample, info = super().get_action(observation)
+        mean = info['mean']
         k_sum = np.sum(mean[1:]) # the first one in mean is f, all others are k's
-        info = dict(mean=mean, log_std=log_std, k_sum=k_sum)
+        info['k'] = k_sum
         return sample, info
-
-
-
 
 
 #################################### Hardware as Policy ####################################
@@ -259,22 +220,25 @@ class CompMechPolicy_OptK_MultiSprings_HwAsPolicy(MyBasePolicy_OptK_MultiSprings
 
             pi_and_f_ts, log_std_ts = self.mech_policy_model.build([f_ts_normalized, y1_and_v1_ph])
 
-        self._f_policy = tf.compat.v1.get_default_session().make_callable([pi_and_f_ts, log_std_ts], feed_list=[y1_and_v1_ph])
+        self._policy_callable = tf.compat.v1.get_default_session().make_callable([pi_and_f_ts, log_std_ts], feed_list=[y1_and_v1_ph])
+
+        debug_ts = self.mech_policy_model.get_tensors()['debug_ts']
+        self._debug_callable = tf.compat.v1.get_default_session().make_callable(debug_ts, feed_list=[y1_and_v1_ph])
 
 
     def get_actions(self, observations):
         samples, info = super().get_actions(observations)
-        k_sum_ts = self.mech_policy_model.get_mech_params()[2]
-        k = np.full(samples.shape, tf.compat.v1.get_default_session().run(k_sum_ts))
-        info['k'] = k
+        k_sum_ts = self.mech_policy_model.get_tensors()['k_sum_ts']
+        k_sum = np.full(samples.shape, tf.compat.v1.get_default_session().run(k_sum_ts))
+        info['k'] = k_sum
         return samples, info
     
 
     def get_action(self, observation):
         sample, info = super().get_action(observation)
-        k_sum_ts = self.mech_policy_model.get_mech_params()[2]
-        k = np.full(sample.shape, tf.compat.v1.get_default_session().run(k_sum_ts))
-        info['k'] = k
+        k_sum_ts = self.mech_policy_model.get_tensors()['k_sum_ts']
+        k_sum = np.full(sample.shape, tf.compat.v1.get_default_session().run(k_sum_ts))
+        info['k'] = k_sum
         return sample, info
 
 
@@ -303,6 +267,13 @@ class CompMechPolicy_OptK_MultiSprings_HwAsPolicy(MyBasePolicy_OptK_MultiSprings
         )
 
 
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_debug_callable']
+        return new_dict
+
+
 #################################### Hardware in Policy and Action ####################################
 
 
@@ -322,7 +293,10 @@ class CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction(MyBasePolicy_OptK_Mul
             self._variable_scope = vs
             f_and_k_ts, log_std_ts = self.comp_mech_policy_model.build(y1_and_v1_ph)
 
-        self._f_policy = tf.compat.v1.get_default_session().make_callable([f_and_k_ts, log_std_ts], feed_list=[y1_and_v1_ph])
+        self._policy_callable = tf.compat.v1.get_default_session().make_callable([f_and_k_ts, log_std_ts], feed_list=[y1_and_v1_ph])
+
+        debug_ts = self.comp_mech_policy_model.get_tensors()['debug_ts']
+        self._debug_callable = tf.compat.v1.get_default_session().make_callable(debug_ts, feed_list=[y1_and_v1_ph])
 
 
     def dist_info_sym(self, obs_var, state_info_vars, name='default'):
@@ -365,7 +339,7 @@ class CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction(MyBasePolicy_OptK_Mul
                 distribution.
         '''
         flat_obs = self.observation_space.flatten_n(observations)
-        means, log_stds = self._f_policy(flat_obs)
+        means, log_stds = self._policy_callable(flat_obs)
         rnd = np.random.normal(size=means.shape)
         samples = rnd * np.exp(log_stds) + means
         samples = self.action_space.unflatten_n(samples)
@@ -391,7 +365,7 @@ class CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction(MyBasePolicy_OptK_Mul
                 distribution.
         '''
         flat_obs = self.observation_space.flatten(observation)
-        mean, log_std = self._f_policy([flat_obs])
+        mean, log_std = self._policy_callable([flat_obs])
         rnd = np.random.normal(size=mean.shape)
         sample = rnd * np.exp(log_std) + mean
         sample = self.action_space.unflatten(sample[0])
@@ -400,3 +374,9 @@ class CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction(MyBasePolicy_OptK_Mul
         k_sum = np.sum(mean[1:]) # the first one in mean is f, all others are k's
         info = dict(mean=mean, log_std=log_std, k_sum=k_sum)
         return sample, info
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_debug_callable']
+        return new_dict
