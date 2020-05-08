@@ -15,7 +15,7 @@ dt = 0.002
 n_steps_per_action = 5
 n_steps_per_episode = 1000
 
-n_springs = 1 # for multi-spring cases
+n_springs = 50 # for multi-spring cases
 
 reward_alpha = 10.0
 reward_beta = 0.5
@@ -73,4 +73,4 @@ ppo_algo_kwargs = dict(
     center_adv=True,
 )
 
-ppo_train_kwargs = dict(n_epochs=1000, batch_size=2048, plot=False)
+ppo_train_kwargs = dict(n_epochs=2000, batch_size=2048, plot=False)

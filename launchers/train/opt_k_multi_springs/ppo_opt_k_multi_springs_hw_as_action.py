@@ -19,7 +19,7 @@ from mass_spring_envs.envs.mass_spring_env_opt_k_multi_springs import MassSpring
 from policies.opt_k_multi_springs.models import MechPolicyModel_OptK_MultiSprings_HwAsAction
 from policies.opt_k_multi_springs.policies import CompMechPolicy_OptK_MultiSprings_HwAsAction
 
-from shared_params import params
+from shared_params import params_opt_k as params
 
 from launchers.utils.zip_project import zip_project
 from launchers.utils.normalized_env import normalize
