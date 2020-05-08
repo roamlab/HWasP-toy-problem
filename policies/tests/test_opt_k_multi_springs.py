@@ -11,18 +11,18 @@ from shared_params import params
 from garage.tf.envs import TfEnv
 from garage.tf.models import MLPModel
 
-from mass_spring_envs.envs.mass_spring_env_opt_k_multi_springs import MassSpringEnv_OptK_MultiSprings_HwAsAction
-from mass_spring_envs.envs.mass_spring_env_opt_k_multi_springs import MassSpringEnv_OptK_MultiSprings_HwAsPolicy
+from mass_spring_envs.envs.mass_spring_env_opt_k import MassSpringEnv_OptK_HwAsAction
+from mass_spring_envs.envs.mass_spring_env_opt_k import MassSpringEnv_OptK_HwAsPolicy
 
-from policies.opt_k_multi_springs.models import MechPolicyModel_OptK_MultiSprings_HwAsAction
-from policies.opt_k_multi_springs.models import MechPolicyModel_OptK_MultiSprings_HwAsPolicy
-from policies.opt_k_multi_springs.models import CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction
+from policies.opt_k.models import MechPolicyModel_OptK_HwAsAction
+from policies.opt_k.models import MechPolicyModel_OptK_HwAsPolicy
+from policies.opt_k.models import CompMechPolicyModel_OptK_HwInPolicyAndAction
 
-from policies.opt_k_multi_springs.policies import CompMechPolicy_OptK_MultiSprings_HwAsAction
-from policies.opt_k_multi_springs.policies import CompMechPolicy_OptK_MultiSprings_HwAsPolicy      
-from policies.opt_k_multi_springs.policies import CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction     
+from policies.opt_k.policies import CompMechPolicy_OptK_HwAsAction
+from policies.opt_k.policies import CompMechPolicy_OptK_HwAsPolicy      
+from policies.opt_k.policies import CompMechPolicy_OptK_HwInPolicyAndAction     
 
-class TestPolicy_OptK_MultiSprings_HwAsAction(unittest.TestCase):
+class TestPolicy_OptK_HwAsAction(unittest.TestCase):
     @classmethod
     def setupClass(cls):
         # runs once in class instantiation
@@ -46,11 +46,11 @@ class TestPolicy_OptK_MultiSprings_HwAsAction(unittest.TestCase):
 
 
     def test_mech_policy_model(self):
-        print('\n Testing MechPolicyModel_OptK_MultiSprings_HwAsAction ...')
+        print('\n Testing MechPolicyModel_OptK_HwAsAction ...')
         y1 = 0.1
         v1 = 0.0
 
-        mech_policy_model = MechPolicyModel_OptK_MultiSprings_HwAsAction(name='test_mech_policy_model', params=params)
+        mech_policy_model = MechPolicyModel_OptK_HwAsAction(name='test_mech_policy_model', params=params)
 
         with tf.compat.v1.Session() as sess:
             y1_and_v1_ph = tf.compat.v1.placeholder(shape=(None, 2), dtype=tf.float32)
@@ -61,11 +61,11 @@ class TestPolicy_OptK_MultiSprings_HwAsAction(unittest.TestCase):
 
 
     def test_comp_mech_policy(self):
-        print('\n Testing CompMechPolicy_OptK_MultiSprings_HwAsAction ...')
+        print('\n Testing CompMechPolicy_OptK_HwAsAction ...')
         y1 = 0.1
         v1 = 0.1
 
-        env = TfEnv(MassSpringEnv_OptK_MultiSprings_HwAsAction(params))
+        env = TfEnv(MassSpringEnv_OptK_HwAsAction(params))
 
         comp_policy_model = MLPModel(output_dim=1, 
             hidden_sizes=(32, 32), 
@@ -74,10 +74,10 @@ class TestPolicy_OptK_MultiSprings_HwAsAction(unittest.TestCase):
             hidden_w_init=tf.zeros_initializer(), 
             output_b_init=tf.zeros_initializer(), 
             output_w_init=tf.zeros_initializer())
-        mech_policy_model = MechPolicyModel_OptK_MultiSprings_HwAsAction(params=params)
+        mech_policy_model = MechPolicyModel_OptK_HwAsAction(params=params)
 
         with tf.compat.v1.Session() as sess:        
-            comp_mech_policy = CompMechPolicy_OptK_MultiSprings_HwAsAction(name='test_comp_mech_policy', 
+            comp_mech_policy = CompMechPolicy_OptK_HwAsAction(name='test_comp_mech_policy', 
                 env_spec=env.spec, 
                 comp_policy_model=comp_policy_model, 
                 mech_policy_model=mech_policy_model)
@@ -95,7 +95,7 @@ class TestPolicy_OptK_MultiSprings_HwAsAction(unittest.TestCase):
             print(comp_mech_policy.distribution)
 
 
-class TestPolicy_OptK_MultiSprings_HwAsPolicy(unittest.TestCase):
+class TestPolicy_OptK_HwAsPolicy(unittest.TestCase):
     @classmethod
     def setupClass(cls):
         # runs once in class instantiation
@@ -119,12 +119,12 @@ class TestPolicy_OptK_MultiSprings_HwAsPolicy(unittest.TestCase):
 
 
     def test_mech_policy_model(self):
-        print('\n Testing MechPolicyModel_OptK_MultiSprings_HwAsPolicy ...')
+        print('\n Testing MechPolicyModel_OptK_HwAsPolicy ...')
         y1 = 0.1
         v1 = 0.0
         f_normalized = 1.0
 
-        mech_policy_model = MechPolicyModel_OptK_MultiSprings_HwAsPolicy(name='test_mech_policy_model', params=params)
+        mech_policy_model = MechPolicyModel_OptK_HwAsPolicy(name='test_mech_policy_model', params=params)
 
         with tf.compat.v1.Session() as sess:
             f_ph = tf.compat.v1.placeholder(shape=(None, 1), dtype=tf.float32)
@@ -141,7 +141,7 @@ class TestPolicy_OptK_MultiSprings_HwAsPolicy(unittest.TestCase):
         y1 = 0.1
         v1 = 0.1
         
-        env = TfEnv(MassSpringEnv_OptK_MultiSprings_HwAsPolicy(params))
+        env = TfEnv(MassSpringEnv_OptK_HwAsPolicy(params))
 
         comp_policy_model = MLPModel(output_dim=1, 
             hidden_sizes=(32, 32), 
@@ -150,10 +150,10 @@ class TestPolicy_OptK_MultiSprings_HwAsPolicy(unittest.TestCase):
             hidden_w_init=tf.zeros_initializer(), 
             output_b_init=tf.zeros_initializer(), 
             output_w_init=tf.zeros_initializer())
-        mech_policy_model = MechPolicyModel_OptK_MultiSprings_HwAsPolicy(params)
+        mech_policy_model = MechPolicyModel_OptK_HwAsPolicy(params)
 
         with tf.compat.v1.Session() as sess:        
-            comp_mech_policy = CompMechPolicy_OptK_MultiSprings_HwAsPolicy(name='test_comp_mech_policy', 
+            comp_mech_policy = CompMechPolicy_OptK_HwAsPolicy(name='test_comp_mech_policy', 
                 env_spec=env.spec, 
                 comp_policy_model=comp_policy_model, 
                 mech_policy_model=mech_policy_model)
@@ -172,7 +172,7 @@ class TestPolicy_OptK_MultiSprings_HwAsPolicy(unittest.TestCase):
             print(comp_mech_policy.distribution)
 
 
-class TestPolicy_OptK_MultiSprings_HwInPolicyAndAction(unittest.TestCase):
+class TestPolicy_OptK_HwInPolicyAndAction(unittest.TestCase):
     @classmethod
     def setupClass(cls):
         # runs once in class instantiation
@@ -194,11 +194,11 @@ class TestPolicy_OptK_MultiSprings_HwInPolicyAndAction(unittest.TestCase):
 
 
     def test_comp_mech_policy_model(self):
-        print('\n Testing CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction ...')
+        print('\n Testing CompMechPolicyModel_OptK_HwInPolicyAndAction ...')
         y1 = 0.1
         v1 = 0.0
 
-        comp_mech_policy_model = CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(name='test_comp_mech_policy_model', params=params)
+        comp_mech_policy_model = CompMechPolicyModel_OptK_HwInPolicyAndAction(name='test_comp_mech_policy_model', params=params)
 
         with tf.compat.v1.Session() as sess:
             y1_and_v1_ph = tf.compat.v1.placeholder(shape=(None, 2), dtype=tf.float32)
@@ -210,16 +210,16 @@ class TestPolicy_OptK_MultiSprings_HwInPolicyAndAction(unittest.TestCase):
 
 
     def test_comp_mech_policy(self):
-        print('\n Testing CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction ...')        
+        print('\n Testing CompMechPolicy_OptK_HwInPolicyAndAction ...')        
         y1 = 0.1
         v1 = 0.1
 
-        env = TfEnv(MassSpringEnv_OptK_MultiSprings_HwAsAction(params))
+        env = TfEnv(MassSpringEnv_OptK_HwAsAction(params))
 
-        comp_mech_policy_model = CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(params)
+        comp_mech_policy_model = CompMechPolicyModel_OptK_HwInPolicyAndAction(params)
 
         with tf.compat.v1.Session() as sess:        
-            comp_mech_policy = CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction(name='test_comp_mech_policy', 
+            comp_mech_policy = CompMechPolicy_OptK_HwInPolicyAndAction(name='test_comp_mech_policy', 
                 env_spec=env.spec, 
                 comp_mech_policy_model=comp_mech_policy_model)
 

@@ -4,11 +4,11 @@ import tensorflow as tf
 from garage.tf.policies.base import StochasticPolicy
 from garage.tf.distributions.diagonal_gaussian import DiagonalGaussian
 
-from shared_params import params
+from shared_params import params_opt_k as params
 
 #################################### Base Class ####################################
 
-class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
+class MyBasePolicy_OptK(StochasticPolicy):
     def __init__(self, env_spec, name='my_base_policy'):
         super().__init__(env_spec=env_spec, name=name)
         self.obs_dim = env_spec.observation_space.flat_dim
@@ -40,6 +40,8 @@ class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
         rnd = np.random.normal(size=means.shape)
         samples = rnd * np.exp(log_stds) + means
         samples = self.action_space.unflatten_n(samples)
+        # batch_size = samples.shape[0]
+        # samples = np.clip(samples, np.repeat([self.env_spec.action_space.low], batch_size, axis=0), np.repeat([self.env_spec.action_space.high], batch_size, axis=0))
         means = self.action_space.unflatten_n(means)
         log_stds = self.action_space.unflatten_n(log_stds)
         info = dict(mean=means, log_std=log_stds)
@@ -65,6 +67,7 @@ class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
         rnd = np.random.normal(size=mean.shape)
         sample = rnd * np.exp(log_std) + mean
         sample = self.action_space.unflatten(sample[0])
+        # sample = np.clip(sample, self.env_spec.action_space.low, self.env_spec.action_space.high)
         mean = self.action_space.unflatten(mean[0])
         log_std = self.action_space.unflatten(log_std[0])
         info = dict(mean=mean, log_std=log_std)
@@ -130,7 +133,7 @@ class MyBasePolicy_OptK_MultiSprings(StochasticPolicy):
 #################################### Hardware as Action ####################################
 
 
-class CompMechPolicy_OptK_MultiSprings_HwAsAction(MyBasePolicy_OptK_MultiSprings):
+class CompMechPolicy_OptK_HwAsAction(MyBasePolicy_OptK):
     def __init__(self, env_spec,
                 comp_policy_model, 
                 mech_policy_model, 
@@ -201,7 +204,7 @@ class CompMechPolicy_OptK_MultiSprings_HwAsAction(MyBasePolicy_OptK_MultiSprings
 #################################### Hardware as Policy ####################################
 
 
-class CompMechPolicy_OptK_MultiSprings_HwAsPolicy(MyBasePolicy_OptK_MultiSprings):
+class CompMechPolicy_OptK_HwAsPolicy(MyBasePolicy_OptK):
     def __init__(self, env_spec,
                 comp_policy_model, 
                 mech_policy_model, 
@@ -277,7 +280,7 @@ class CompMechPolicy_OptK_MultiSprings_HwAsPolicy(MyBasePolicy_OptK_MultiSprings
 #################################### Hardware in Policy and Action ####################################
 
 
-class CompMechPolicy_OptK_MultiSprings_HwInPolicyAndAction(MyBasePolicy_OptK_MultiSprings):
+class CompMechPolicy_OptK_HwInPolicyAndAction(MyBasePolicy_OptK):
     def __init__(self, 
                 env_spec,
                 comp_mech_policy_model,

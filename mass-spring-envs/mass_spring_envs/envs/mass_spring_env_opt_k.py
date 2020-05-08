@@ -30,6 +30,7 @@ illustration of the system:
 
 import gym
 import numpy as np
+from dowel import tabular
 
 
 def sigmoid(x):
@@ -53,7 +54,7 @@ def get_soft_conditioned_val(value1, value2, test_value, criterion, sigmoid_coef
 
 #################################### Base Class ####################################
 
-class MassSpringEnv_OptK_MultiSprings(gym.Env):
+class MassSpringEnv_OptK(gym.Env):
     '''
     1D mass-spring toy problem.
     Base class for Optimization Case I: optimizing the spring stiffness k
@@ -148,7 +149,7 @@ class MassSpringEnv_OptK_MultiSprings(gym.Env):
 #################################### Hardware as Action ####################################
 
 
-class MassSpringEnv_OptK_MultiSprings_HwAsAction(MassSpringEnv_OptK_MultiSprings):
+class MassSpringEnv_OptK_HwAsAction(MassSpringEnv_OptK):
     '''
     Action: f, k
     observation: y1, v1
@@ -201,6 +202,7 @@ class MassSpringEnv_OptK_MultiSprings_HwAsAction(MassSpringEnv_OptK_MultiSprings
             print('y2: ', y2)
             print('v2: ', self.v1)
             print('k: ', k_sum)
+            tabular.record('Env/k', k_sum)
         return obs, reward, done, info
 
 
@@ -209,7 +211,7 @@ class MassSpringEnv_OptK_MultiSprings_HwAsAction(MassSpringEnv_OptK_MultiSprings
 
 
 
-class MassSpringEnv_OptK_MultiSprings_HwAsPolicy(MassSpringEnv_OptK_MultiSprings):
+class MassSpringEnv_OptK_HwAsPolicy(MassSpringEnv_OptK):
     def __init__(self, params):
         super().__init__(params)
  

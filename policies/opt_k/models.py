@@ -39,7 +39,7 @@ from garage.tf.models.mlp import mlp
 #################################### Base Class ####################################
 
 
-class MyBaseModel_OptK_MultiSprings(Model):
+class MyBaseModel_OptK(Model):
     '''
     A Model only contains the structure/configuration of the underlying
     computation graphs.
@@ -82,7 +82,7 @@ class MyBaseModel_OptK_MultiSprings(Model):
 #################################### Hardware as Action ####################################
 
 
-class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings):
+class MechPolicyModel_OptK_HwAsAction(MyBaseModel_OptK):
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
         self.f_and_k_log_std_init = [params.f_log_std_init_action,] + [params.k_log_std_init_action,] * params.n_springs
@@ -112,9 +112,11 @@ class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings
         self.k_pre_var = parameter(
             input_var=inputs[0],
             length=self.n_springs,
-            # initializer=tf.constant_initializer(self.k_pre_init),
-            initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub),
-            trainable=True,
+            initializer=tf.constant_initializer(self.k_pre_init), # uncomment this line when training cmaes(hyperparameter)+ppo
+            trainable=False,  # uncomment this line when training cmaes(hyperparameter)+ppo
+
+            # initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub), # uncomment this line when training ppo only
+            # trainable=True, # uncomment this line when training ppo only
             name='k_pre')
 
         self.k_ts = tf.math.add(tf.math.sigmoid(self.k_pre_var) * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 
@@ -161,7 +163,7 @@ class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings
 #################################### Hardware as Policy ####################################
 
 
-class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings):
+class MechPolicyModel_OptK_HwAsPolicy(MyBaseModel_OptK):
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
 
@@ -258,7 +260,7 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
 
 ################################### Hardware in Policy and Action ###################################
 
-class CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(MyBaseModel_OptK_MultiSprings):
+class CompMechPolicyModel_OptK_HwInPolicyAndAction(MyBaseModel_OptK):
     def __init__(self, params, name='comp_mech_policy_model'):
         super().__init__(params, name=name)
         from garage.tf.models.mlp import mlp

@@ -9,18 +9,18 @@ half_vel_range = 2.0
 m1 = 0.1
 m2 = 0.1
 h = 0.2
-l = 0.1
+k = 20
 g = 9.8
 dt = 0.002
 n_steps_per_action = 5
 n_steps_per_episode = 1000
 
-n_springs = 1 # for multi-spring cases
+n_segments = 10 
 
-reward_alpha = 10.0
-reward_beta = 0.5
+reward_alpha = 1.0
+reward_beta = 0.05
 reward_gamma = 2.0
-reward_switch_pos_vel_thresh = 0.1
+reward_switch_pos_vel_thresh = 0.08
 
 # policy params
 def inv_sigmoid(y, lb, ub):
@@ -29,27 +29,30 @@ def inv_sigmoid(y, lb, ub):
     '''
     return -np.log((ub - lb) / (y - lb) - 1)
 
-k_ub = 100.0 / n_springs
-k_lb = 0.0 / n_springs
-k_range = k_ub - k_lb
-k_init = 50.0 / n_springs
-k_pre_init = inv_sigmoid(k_init, k_lb, k_ub)
-k_pre_init_lb = -5
-k_pre_init_ub = 5
+l_ub = 0.5 / n_segments
+l_lb = 0.0 / n_segments
+l_range = l_ub - l_lb
+l_init = (l_lb + l_ub) / 2
+l_pre_init = inv_sigmoid(l_init, l_lb, l_ub)
+l_pre_init_lb = -5
+l_pre_init_ub = 5
+
+k_interface = 2e2
+b_interface = 1e1
 
 # init stds
-std_range_ratio_action = 0.3
-std_range_ratio_auxiliary = 0.3
+std_range_ratio_action = 1.0
+std_range_ratio_auxiliary = 1.0
 
 f_std_init_action = std_range_ratio_action * (half_force_range * 2)
 f_log_std_init_action = np.log(f_std_init_action)
-k_std_init_action = std_range_ratio_action * k_range
-k_log_std_init_action = np.log(k_std_init_action)
+l_std_init_action = std_range_ratio_action * l_range
+l_log_std_init_action = np.log(l_std_init_action)
 
 f_std_init_auxiliary = std_range_ratio_auxiliary * (half_force_range * 2)
 f_log_std_init_auxiliary = np.log(f_std_init_auxiliary)
-k_std_init_auxiliary = std_range_ratio_auxiliary * k_range
-k_log_std_init_auxiliary = np.log(k_std_init_auxiliary)
+l_std_init_auxiliary = std_range_ratio_auxiliary * l_range
+l_log_std_init_auxiliary = np.log(l_std_init_auxiliary)
 
 # learning params
 comp_policy_network_size = (32, 32)
@@ -60,7 +63,6 @@ ppo_algo_kwargs = dict(
     discount=0.99,
     gae_lambda=0.95,
     lr_clip_range=0.1,
-    max_kl_step=0.01,
 
     optimizer_args=dict(
         batch_size=128,
@@ -69,8 +71,8 @@ ppo_algo_kwargs = dict(
     ),
     stop_entropy_gradient=False,
     entropy_method='regularized',
-    policy_ent_coeff=1e-4,
+    policy_ent_coeff=5e-4,
     center_adv=True,
 )
 
-ppo_train_kwargs = dict(n_epochs=1000, batch_size=2048, plot=False)
+ppo_train_kwargs = dict(n_epochs=2000, batch_size=2048, plot=False)

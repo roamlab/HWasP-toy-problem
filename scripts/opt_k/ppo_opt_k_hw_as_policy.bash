@@ -1,13 +1,13 @@
 #!/bin/bash
 export datetime=`date '+%Y_%m_%d_%H_%M_%S'`
 export n_terminals=4
-export n_runs_each_terminal=2
+export n_runs_each_terminal=1
 
 function run_exps_in_terminal()
 {
     for (( run_id=0; run_id<$n_runs_each_terminal; run_id++ ))
     do
-        python launchers/train/opt_k_multi_springs/ppo_opt_k_multi_springs_hw_as_action.py --seed=$(( $1*$n_terminals+$run_id )) --exp_id=$datetime
+        python launchers/train/opt_k/ppo_opt_k_hw_as_policy.py --seed=$(( $1+$run_id*$n_terminals )) --exp_id=$datetime
     done
 }
 
