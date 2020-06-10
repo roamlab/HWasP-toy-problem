@@ -74,6 +74,7 @@ ppo_algo_kwargs = dict(
     center_adv=True,
 )
 
+<<<<<<< HEAD:shared_params/params_opt_k.py
 ppo_train_kwargs = dict(n_epochs=2000, batch_size=2000, plot=False)
 
 # for pure cmaes
@@ -95,3 +96,6 @@ ppo_inner_final_average_discounted_return_window_size = 10
 cmaes_options = {'tolfun':1.0, 'tolx':0.1, 'popsize': 8, 'maxiter':5, 'verb_log': 1, 'bounds': [[k_lb,] * n_springs, [k_ub,] * n_springs]}
 cmaes_x0 = [(k_lb + k_ub) / 2,] * n_springs
 cmaes_sigma0 = (k_ub - k_lb) / 4  # init sigma ususally chosen as a quater of the total range
+=======
+ppo_train_kwargs = dict(n_epochs=2000, batch_size=2048, plot=False)
+>>>>>>> 96b915fb9428da44096d394d6aa9ddfb25284760:shared_params/params_opt_k.py

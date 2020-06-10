@@ -75,4 +75,4 @@ ppo_algo_kwargs = dict(
     center_adv=True,
 )
 
-ppo_train_kwargs = dict(n_epochs=2000, batch_size=2048, plot=False)
+ppo_train_kwargs = dict(n_epochs=2000, batch_size=2000, plot=False)
