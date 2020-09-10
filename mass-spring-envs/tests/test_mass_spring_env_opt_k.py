@@ -3,13 +3,13 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from mass_spring_envs.envs.mass_spring_env_opt_k_multi_springs import MassSpringEnv_OptK_MultiSprings_HwAsAction
-from mass_spring_envs.envs.mass_spring_env_opt_k_multi_springs import MassSpringEnv_OptK_MultiSprings_HwAsPolicy
+from mass_spring_envs.envs.mass_spring_env_opt_k import MassSpringEnv_OptK_HwAsAction
+from mass_spring_envs.envs.mass_spring_env_opt_k import MassSpringEnv_OptK_HwAsPolicy
 
 from shared_params import params
 
 
-class Test_MassSpringEnv_OptK_HwAsAction_MultiSprings(unittest.TestCase):
+class Test_MassSpringEnv_OptK_HwAsAction(unittest.TestCase):
     @classmethod
     def setupClass(cls):
         # runs once in class instantiation
@@ -23,7 +23,7 @@ class Test_MassSpringEnv_OptK_HwAsAction_MultiSprings(unittest.TestCase):
 
     def setUp(self):
         # everything in setup gets re instantiated for each test function
-        self.env = MassSpringEnv_OptK_MultiSprings_HwAsAction(params)
+        self.env = MassSpringEnv_OptK_HwAsAction(params)
         self.env.reset()
 
     
@@ -100,7 +100,7 @@ class Test_MassSpringEnv_OptK_HwAsPolicy(unittest.TestCase):
     def setUp(self):
         # everything in setup gets re instantiated for each test function
         # self.env = gym.make("MassSpringEnv_OptK_HwAsPolicy-v1")
-        self.env = MassSpringEnv_OptK_MultiSprings_HwAsPolicy(params)
+        self.env = MassSpringEnv_OptK_HwAsPolicy(params)
         obs = self.env.reset()
 
     

@@ -39,7 +39,7 @@ from garage.tf.models.mlp import mlp
 #################################### Base Class ####################################
 
 
-class MyBaseModel_OptL_MultiSegments(Model):
+class MyBaseModel_OptL(Model):
     '''
     A Model only contains the structure/configuration of the underlying
     computation graphs.
@@ -82,7 +82,7 @@ class MyBaseModel_OptL_MultiSegments(Model):
 #################################### Hardware as Action ####################################
 
 
-class MechPolicyModel_OptL_MultiSegments_HwAsAction(MyBaseModel_OptL_MultiSegments):
+class MechPolicyModel_OptL_HwAsAction(MyBaseModel_OptL):
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
         self.f_and_l_log_std_init = [params.f_log_std_init_action,] + [params.l_log_std_init_action,] * params.n_segments
@@ -171,7 +171,7 @@ class MechPolicyModel_OptL_MultiSegments_HwAsAction(MyBaseModel_OptL_MultiSegmen
 #################################### Hardware as Policy ####################################
 
 
-class MechPolicyModel_OptL_MultiSegments_HwAsPolicy(MyBaseModel_OptL_MultiSegments):
+class MechPolicyModel_OptL_HwAsPolicy(MyBaseModel_OptL):
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
 

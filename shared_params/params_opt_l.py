@@ -15,12 +15,12 @@ dt = 0.002
 n_steps_per_action = 5
 n_steps_per_episode = 1000
 
-n_segments = 50 
+n_segments = 10 
 
-reward_alpha = 10.0
-reward_beta = 0.5
+reward_alpha = 1.0
+reward_beta = 0.05
 reward_gamma = 2.0
-reward_switch_pos_vel_thresh = 0.1
+reward_switch_pos_vel_thresh = 0.08
 
 # policy params
 def inv_sigmoid(y, lb, ub):
@@ -41,8 +41,8 @@ k_interface = 2e2
 b_interface = 1e1
 
 # init stds
-std_range_ratio_action = 0.3
-std_range_ratio_auxiliary = 0.3
+std_range_ratio_action = 1.0
+std_range_ratio_auxiliary = 1.0
 
 f_std_init_action = std_range_ratio_action * (half_force_range * 2)
 f_log_std_init_action = np.log(f_std_init_action)
@@ -63,7 +63,6 @@ ppo_algo_kwargs = dict(
     discount=0.99,
     gae_lambda=0.95,
     lr_clip_range=0.1,
-    max_kl_step=0.01,
 
     optimizer_args=dict(
         batch_size=128,
@@ -72,8 +71,8 @@ ppo_algo_kwargs = dict(
     ),
     stop_entropy_gradient=False,
     entropy_method='regularized',
-    policy_ent_coeff=1e-4,
+    policy_ent_coeff=5e-4,
     center_adv=True,
 )
 
-ppo_train_kwargs = dict(n_epochs=2000, batch_size=2048, plot=False)
+ppo_train_kwargs = dict(n_epochs=2000, batch_size=2000, plot=False)

@@ -26,8 +26,8 @@ if __name__=='__main__':
         mean = avg_discounted_return.mean(numeric_only=True, axis=1)
         plt.plot(avg_discounted_return, color, alpha=0.1)
         plt.plot(mean, color,alpha=1.0)
-        plt.xlabel('iterations')
-        plt.ylabel('average discounted return')
+        plt.xlabel('Number of policy updates')
+        plt.ylabel('Average discounted return')
         del avg_discounted_return
     
     plt.show()

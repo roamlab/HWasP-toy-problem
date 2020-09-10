@@ -54,7 +54,7 @@ def get_soft_conditioned_val(value1, value2, test_value, criterion, sigmoid_coef
 
 #################################### Base Class ####################################
 
-class MassSpringEnv_OptL_MultiSegments(gym.Env):
+class MassSpringEnv_OptL(gym.Env):
     '''
     1D mass-spring toy problem.
     Base class for Optimization Case II: optimizing the bar length l
@@ -121,11 +121,10 @@ class MassSpringEnv_OptL_MultiSegments(gym.Env):
         pos_penalty = self.reward_alpha * np.abs(y2 - self.h)
         vel_penalty = self.reward_beta * np.abs(v2)
 
-        force_penalty = get_soft_conditioned_val(self.reward_gamma * np.abs(f), self.reward_gamma * np.abs(self.half_force_range), pos_penalty + vel_penalty, self.reward_switch_pos_vel_thresh, 10.0)
+        force_penalty = get_soft_conditioned_val(self.reward_gamma * np.abs(f), self.reward_gamma * np.abs(self.half_force_range), pos_penalty + vel_penalty, self.reward_switch_pos_vel_thresh, 50.0)
         
         reward = -pos_penalty - vel_penalty - force_penalty
-        weight = 1.0
-        return reward * weight
+        return reward
 
 
     def reset(self):
@@ -140,7 +139,7 @@ class MassSpringEnv_OptL_MultiSegments(gym.Env):
 #################################### Hardware as Action ####################################
 
 
-class MassSpringEnv_OptL_MultiSegments_HwAsAction(MassSpringEnv_OptL_MultiSegments):
+class MassSpringEnv_OptL_HwAsAction(MassSpringEnv_OptL):
     '''
     Action: f, l1, l2, ...
     observation: y1, v1
@@ -217,7 +216,7 @@ class MassSpringEnv_OptL_MultiSegments_HwAsAction(MassSpringEnv_OptL_MultiSegmen
 
 
 
-class MassSpringEnv_OptL_MultiSegments_HwAsPolicy(MassSpringEnv_OptL_MultiSegments):
+class MassSpringEnv_OptL_HwAsPolicy(MassSpringEnv_OptL):
     def __init__(self, params):
         super().__init__(params)
  

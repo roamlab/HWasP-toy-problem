@@ -39,7 +39,7 @@ from garage.tf.models.mlp import mlp
 #################################### Base Class ####################################
 
 
-class MyBaseModel_OptK_MultiSprings(Model):
+class MyBaseModel_OptK(Model):
     '''
     A Model only contains the structure/configuration of the underlying
     computation graphs.
@@ -54,6 +54,8 @@ class MyBaseModel_OptK_MultiSprings(Model):
         self.k_lb = params.k_lb
         self.n_springs = params.n_springs
     
+        self.trq_const = params.trq_const
+        self.r_shaft = params.r_shaft
 
     def network_input_spec(self):
         """
@@ -82,7 +84,7 @@ class MyBaseModel_OptK_MultiSprings(Model):
 #################################### Hardware as Action ####################################
 
 
-class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings):
+class MechPolicyModel_OptK_HwAsAction(MyBaseModel_OptK):
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
         self.f_and_k_log_std_init = [params.f_log_std_init_action,] + [params.k_log_std_init_action,] * params.n_springs
@@ -112,9 +114,11 @@ class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings
         self.k_pre_var = parameter(
             input_var=inputs[0],
             length=self.n_springs,
-            # initializer=tf.constant_initializer(self.k_pre_init),
-            initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub),
-            trainable=True,
+            # initializer=tf.constant_initializer(self.k_pre_init), # uncomment this line when training cmaes(hyperparameter)+ppo
+            # trainable=False,  # uncomment this line when training cmaes(hyperparameter)+ppo
+
+            initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub), # uncomment this line when training ppo only
+            trainable=True, # uncomment this line when training ppo only
             name='k_pre')
 
         self.k_ts = tf.math.add(tf.math.sigmoid(self.k_pre_var) * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 
@@ -161,7 +165,7 @@ class MechPolicyModel_OptK_MultiSprings_HwAsAction(MyBaseModel_OptK_MultiSprings
 #################################### Hardware as Policy ####################################
 
 
-class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings):
+class MechPolicyModel_OptK_HwAsPolicy(MyBaseModel_OptK):
     def __init__(self, params, name='mech_policy_model'):
         super().__init__(params, name=name)
 
@@ -187,7 +191,8 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
         Return:
             output: Tensor output(s) of the model.
         """
-        f_ph_normalized, y1_and_v1_ph = inputs[0] # f_ph_normalized: (?, 1), y1_and_v1_ph: (?, 2)
+        i_ph_normalized, y1_and_v1_ph = inputs[0] # i_ph_normalized: (?, 1), y1_and_v1_ph: (?, 2)
+        f_ts_normalized = i_ph_normalized * self.trq_const / self.r_shaft
         f_ts = tf.multiply(f_ph_normalized[:, 0], tf.compat.v1.constant(self.half_force_range, dtype=tf.float32, name='half_force_range'), name='f') # scalar-tensor multiplication # f_ts: (?,)
         y1_ph = y1_and_v1_ph[:, 0] # y1_ph: (?,) 
         # self.k_pre_var = tf.compat.v1.get_variable('k_pre', initializer=[self.k_pre_init,] * self.n_springs, dtype=tf.float32, trainable=True)
@@ -258,7 +263,7 @@ class MechPolicyModel_OptK_MultiSprings_HwAsPolicy(MyBaseModel_OptK_MultiSprings
 
 ################################### Hardware in Policy and Action ###################################
 
-class CompMechPolicyModel_OptK_MultiSprings_HwInPolicyAndAction(MyBaseModel_OptK_MultiSprings):
+class CompMechPolicyModel_OptK_HwInPolicyAndAction(MyBaseModel_OptK):
     def __init__(self, params, name='comp_mech_policy_model'):
         super().__init__(params, name=name)
         from garage.tf.models.mlp import mlp

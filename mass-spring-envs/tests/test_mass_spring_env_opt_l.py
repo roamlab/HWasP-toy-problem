@@ -3,8 +3,9 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from mass_spring_envs.envs.mass_spring_env_opt_l_multi_segments import MassSpringEnv_OptL_MultiSegments_HwAsAction
-from mass_spring_envs.envs.mass_spring_env_opt_l_multi_segments import MassSpringEnv_OptL_MultiSegments_HwAsPolicy
+from mass_spring_envs.envs.mass_spring_env_opt_l import MassSpringEnv_OptL_HwAsAction
+from mass_spring_envs.envs.mass_spring_env_opt_l import MassSpringEnv_OptL_HwAsPolicy
+
 
 from shared_params import params_opt_l as params
 
@@ -23,7 +24,7 @@ class Test_MassSpringEnv_OptL_HwAsAction(unittest.TestCase):
 
     def setUp(self):
         # everything in setup gets re instantiated for each test function
-        self.env = MassSpringEnv_OptL_MultiSegments_HwAsAction(params)
+        self.env = MassSpringEnv_OptL_HwAsAction(params)
         self.env.reset()
 
     
@@ -101,7 +102,8 @@ class Test_MassSpringEnv_OptL_HwAsPolicy(unittest.TestCase):
     def setUp(self):
         # everything in setup gets re instantiated for each test function
         # self.env = gym.make("MassSpringEnv_OptL_HwAsPolicy-v1")
-        self.env = MassSpringEnv_OptL_MultiSegments_HwAsPolicy(params)
+        self.env = MassSpringEnv_OptL_HwAsPolicy(params)
+
         obs = self.env.reset()
 
     

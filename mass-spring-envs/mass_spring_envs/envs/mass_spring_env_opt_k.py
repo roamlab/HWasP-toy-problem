@@ -30,6 +30,7 @@ illustration of the system:
 
 import gym
 import numpy as np
+from dowel import tabular
 
 
 def sigmoid(x):
@@ -53,13 +54,15 @@ def get_soft_conditioned_val(value1, value2, test_value, criterion, sigmoid_coef
 
 #################################### Base Class ####################################
 
-class MassSpringEnv_OptK_MultiSprings(gym.Env):
+class MassSpringEnv_OptK(gym.Env):
     '''
     1D mass-spring toy problem.
     Base class for Optimization Case I: optimizing the spring stiffness k
     '''
     def __init__(self, params):
         # params
+        self.r_shaft = params.r_shaft
+        self.trq_const = params.trq_const
         self.half_force_range = params.half_force_range
         self.k_lb = params.k_lb
         self.k_ub = params.k_ub
@@ -148,7 +151,7 @@ class MassSpringEnv_OptK_MultiSprings(gym.Env):
 #################################### Hardware as Action ####################################
 
 
-class MassSpringEnv_OptK_MultiSprings_HwAsAction(MassSpringEnv_OptK_MultiSprings):
+class MassSpringEnv_OptK_HwAsAction(MassSpringEnv_OptK):
     '''
     Action: f, k
     observation: y1, v1
@@ -185,7 +188,8 @@ class MassSpringEnv_OptK_MultiSprings_HwAsAction(MassSpringEnv_OptK_MultiSprings
         """
         self.step_cnt += 1
         action = np.clip(action.copy(), self.action_space.low, self.action_space.high)
-        f = action[0] # input force
+        i = action[0] # input force
+        f = self.trq_const * i / self.r_shaft
         k = action[1:] # spring stiffness
         k_sum = np.sum(k)
         f_total = f + (self.m1 + self.m2) * self.g - k_sum*self.y1
@@ -201,6 +205,7 @@ class MassSpringEnv_OptK_MultiSprings_HwAsAction(MassSpringEnv_OptK_MultiSprings
             print('y2: ', y2)
             print('v2: ', self.v1)
             print('k: ', k_sum)
+            tabular.record('Env/k', k_sum)
         return obs, reward, done, info
 
 
@@ -209,7 +214,7 @@ class MassSpringEnv_OptK_MultiSprings_HwAsAction(MassSpringEnv_OptK_MultiSprings
 
 
 
-class MassSpringEnv_OptK_MultiSprings_HwAsPolicy(MassSpringEnv_OptK_MultiSprings):
+class MassSpringEnv_OptK_HwAsPolicy(MassSpringEnv_OptK):
     def __init__(self, params):
         super().__init__(params)
  
