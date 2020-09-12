@@ -32,7 +32,7 @@ def inv_sigmoid(y, lb, ub):
 l_ub = 0.5 / n_segments
 l_lb = 0.0 / n_segments
 l_range = l_ub - l_lb
-l_init = (l_lb + l_ub) / 2
+l_init = (l_lb + l_ub) / 2 # will be overrided
 l_pre_init = inv_sigmoid(l_init, l_lb, l_ub)
 l_pre_init_lb = -5
 l_pre_init_ub = 5
@@ -58,11 +58,13 @@ l_log_std_init_auxiliary = np.log(l_std_init_auxiliary)
 comp_policy_network_size = (32, 32)
 # baseline_network_size = (32, 32)
 
+# for pure ppo
 ppo_algo_kwargs = dict(
     max_path_length=n_steps_per_episode,
     discount=0.99,
     gae_lambda=0.95,
     lr_clip_range=0.1,
+    max_kl_step=0.01,
 
     optimizer_args=dict(
         batch_size=128,
@@ -71,8 +73,28 @@ ppo_algo_kwargs = dict(
     ),
     stop_entropy_gradient=False,
     entropy_method='regularized',
-    policy_ent_coeff=5e-4,
+    policy_ent_coeff=1e-4,
     center_adv=True,
 )
 
 ppo_train_kwargs = dict(n_epochs=2000, batch_size=2000, plot=False)
+
+# for pure cmaes
+cmaes_algo_kwargs = dict(
+    max_path_length=n_steps_per_episode,
+    n_samples=32,
+    discount=0.99,
+    sigma0=2.0,
+)
+
+cmaes_train_kwargs = dict(n_epochs=100, batch_size=2000, plot=False)
+
+
+# for cmaes (hyperparam search) + ppo
+ppo_inner_train_kwargs = dict(n_epochs=300, batch_size=500, plot=False)
+
+ppo_inner_final_average_discounted_return_window_size = 10
+
+cmaes_options = {'tolfun':1.0, 'tolx':0.1, 'popsize': 8, 'maxiter':5, 'verb_log': 1, 'bounds': [[l_lb,] * n_segments, [l_ub,] * n_segments]}
+cmaes_x0 = [(l_lb + l_ub) / 2,] * n_segments
+cmaes_sigma0 = (l_ub - l_lb) / 4  # init sigma ususally chosen as a quater of the total range
