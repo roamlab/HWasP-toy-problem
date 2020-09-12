@@ -64,7 +64,6 @@ ppo_algo_kwargs = dict(
     discount=0.99,
     gae_lambda=0.95,
     lr_clip_range=0.1,
-    max_kl_step=0.01,
 
     optimizer_args=dict(
         batch_size=128,
@@ -73,10 +72,11 @@ ppo_algo_kwargs = dict(
     ),
     stop_entropy_gradient=False,
     entropy_method='regularized',
-    policy_ent_coeff=1e-4,
+    policy_ent_coeff=5e-4,
     center_adv=True,
 )
 
+<<<<<<< HEAD
 ppo_train_kwargs = dict(n_epochs=2000, batch_size=2000, plot=False)
 
 # for pure cmaes
@@ -98,3 +98,6 @@ ppo_inner_final_average_discounted_return_window_size = 10
 cmaes_options = {'tolfun':1.0, 'tolx':0.1, 'popsize': 8, 'maxiter':5, 'verb_log': 1, 'bounds': [[l_lb,] * n_segments, [l_ub,] * n_segments]}
 cmaes_x0 = [(l_lb + l_ub) / 2,] * n_segments
 cmaes_sigma0 = (l_ub - l_lb) / 4  # init sigma ususally chosen as a quater of the total range
+=======
+ppo_train_kwargs = dict(n_epochs=2000, batch_size=2000, plot=False)
+>>>>>>> 27e3de7ecffc0919c10cea42d913b777ad8e73ea

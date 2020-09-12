@@ -114,11 +114,19 @@ class MechPolicyModel_OptK_HwAsAction(MyBaseModel_OptK):
         self.k_pre_var = parameter(
             input_var=inputs[0],
             length=self.n_springs,
+<<<<<<< HEAD:policies/opt_k/models.py
             # initializer=tf.constant_initializer(self.k_pre_init), # uncomment this line when training cmaes(hyperparameter)+ppo
             # trainable=False,  # uncomment this line when training cmaes(hyperparameter)+ppo
 
             initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub), # uncomment this line when training ppo only
             trainable=True, # uncomment this line when training ppo only
+=======
+            initializer=tf.constant_initializer(self.k_pre_init), # uncomment this line when training cmaes(hyperparameter)+ppo
+            trainable=False,  # uncomment this line when training cmaes(hyperparameter)+ppo
+
+            # initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub), # uncomment this line when training ppo only
+            # trainable=True, # uncomment this line when training ppo only
+>>>>>>> 27e3de7ecffc0919c10cea42d913b777ad8e73ea:policies/opt_k/models.py
             name='k_pre')
 
         self.k_ts = tf.math.add(tf.math.sigmoid(self.k_pre_var) * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 

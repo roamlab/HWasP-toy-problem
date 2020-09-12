@@ -39,8 +39,13 @@ def run_task(snapshot_config, *_):
 
         comp_policy_model = MLPModel(output_dim=1, 
             hidden_sizes=params.comp_policy_network_size, 
+<<<<<<< HEAD
             hidden_nonlinearity=None,
             output_nonlinearity=None,
+=======
+            hidden_nonlinearity=tf.nn.tanh,
+            output_nonlinearity=tf.nn.tanh,
+>>>>>>> 27e3de7ecffc0919c10cea42d913b777ad8e73ea
             )
 
         mech_policy_model = MechPolicyModel_OptK_HwAsAction(params)
@@ -78,4 +83,8 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
+<<<<<<< HEAD
     run_experiment(run_task, exp_prefix='cmaes_opt_k_hw_as_action_{}_'.format(args.exp_id) + str(params.n_springs)+'_params', snapshot_mode='last', seed=args.seed, force_cpu=True)
+=======
+    run_experiment(run_task, exp_prefix='cmaes_opt_k_hw_as_action_{}'.format(args.exp_id), snapshot_mode='last', seed=args.seed, force_cpu=True)
+>>>>>>> 27e3de7ecffc0919c10cea42d913b777ad8e73ea
