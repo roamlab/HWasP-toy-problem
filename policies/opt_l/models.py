@@ -79,6 +79,94 @@ class MyBaseModel_OptL(Model):
         raise NotImplementedError
 
 
+#################################### Fixed Hardware ####################################
+
+
+class MechPolicyModel_OptL_FixedHW(MyBaseModel_OptL):
+    def __init__(self, params, name='mech_policy_model'):
+        super().__init__(params, name=name)
+        self.f_and_l_log_std_init = [params.f_log_std_init_action,] + [params.l_log_std_init_action,] * params.n_segments
+
+    def _build(self, inputs, name=None):
+        """
+        Output of the model given input placeholder(s).
+
+        User should implement _build() inside their subclassed model,
+        and construct the computation graphs in this function.
+
+        Args:
+            inputs: Tensor input(s), recommended to be position arguments, e.g.
+              def _build(self, state_input, action_input, name=None).
+              It would be usually same as the inputs in build().
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            output: Tensor output(s) of the model.
+        """
+
+        # the inputs are y1_and_v1_ph
+        # the input values are not used, only the dimensions are used
+
+        self.l_pre_var = parameter(
+            input_var=inputs,
+            length=self.n_segments,
+            initializer=tf.constant_initializer(self.l_pre_init), 
+            trainable=False,  
+            name='l_pre')
+
+        self.l_ts = tf.math.add(tf.math.sigmoid(self.l_pre_var) * tf.compat.v1.constant(self.l_range, dtype=tf.float32, name='l_range'), 
+            tf.compat.v1.constant(self.l_lb, dtype=tf.float32, name='l_lb'), 
+            name='l')
+
+        # the mean in the output of this model only contains l's,but log_std contains the stds for f and l's
+        self.log_std_var = parameter(
+            input_var=inputs,
+            length=1+self.n_segments,
+            initializer=tf.constant_initializer(
+                self.f_and_l_log_std_init),
+            trainable=True,
+            name='log_std')
+        return self.l_ts, self.log_std_var
+
+
+    def network_input_spec(self):
+        """
+        Network input spec.
+
+        Return:
+            *inputs (list[str]): List of key(str) for the network inputs.
+        """
+        return ['y1_and_v1']      
+
+
+    def network_output_spec(self):
+        """
+        Network output spec.
+
+        Return:
+            *inputs (list[str]): List of key(str) for the network outputs.
+        """
+        return ['l', 'log_std']
+
+
+    def get_tensors(self):
+        return dict(l_pre_var=self.l_pre_var, 
+                    l_ts=self.l_ts, 
+                    l_sum_ts=self.l_sum_ts, 
+                    log_std_var=self.log_std_var)
+
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['l_pre_var']
+        del new_dict['l_ts']
+        del new_dict['log_std_var']
+        return new_dict
+
+
 #################################### Hardware as Action ####################################
 
 
@@ -112,7 +200,6 @@ class MechPolicyModel_OptL_HwAsAction(MyBaseModel_OptL):
         self.l_pre_var = parameter(
             input_var=inputs,
             length=self.n_segments,
-            # initializer=tf.constant_initializer(self.l_pre_init),
             initializer=tf.random_uniform_initializer(minval=self.l_pre_init_lb, maxval=self.l_pre_init_ub),
             trainable=True,
             name='l_pre')

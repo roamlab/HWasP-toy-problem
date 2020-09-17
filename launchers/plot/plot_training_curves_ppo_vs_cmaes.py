@@ -4,8 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 import argparse
-import shared_params.params_opt_k as params
-# import shared_params.params_opt_l as params
+# import shared_params.params_opt_k as params
+import shared_params.params_opt_l as params
 
 SKIP = 5
 
@@ -79,7 +79,7 @@ if __name__=='__main__':
     # plt.plot([1, 4e6], [-268.93, -268.93], color='k') # with optimal params under quasi-static assumption
 
     plt.xlim((-100000, 4000000))
-    plt.ylim((-1300, 0))
+    plt.ylim((-1300, 400))
     plt.xlabel('Environment steps', fontsize=14)
     plt.ylabel('Average discounted return', fontsize=14)
     plt.legend(loc='upper right', prop={'size': 14})

@@ -81,6 +81,84 @@ class MyBaseModel_OptK(Model):
         raise NotImplementedError
 
 
+#################################### Fixed Hardware ####################################
+
+
+class MechPolicyModel_OptK_FixedHW(MyBaseModel_OptK):
+    def __init__(self, params, name='mech_policy_model'):
+        super().__init__(params, name=name)
+        self.f_and_k_log_std_init = [params.f_log_std_init_action,] + [params.k_log_std_init_action,] * params.n_springs
+
+    def _build(self, *inputs, name=None):
+        """
+        Output of the model given input placeholder(s).
+
+        User should implement _build() inside their subclassed model,
+        and construct the computation graphs in this function.
+
+        Args:
+            inputs: Tensor input(s), recommended to be position arguments, e.g.
+              def _build(self, state_input, action_input, name=None).
+              It would be usually same as the inputs in build().
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            output: Tensor output(s) of the model.
+        """
+
+        # the inputs are y1_and_v1_ph
+        # the input values are not used, only the dimensions are used
+
+        self.k_pre_var = parameter(
+            input_var=inputs[0],
+            length=self.n_springs,
+            initializer=tf.constant_initializer(self.k_pre_init),
+            trainable=False, 
+            name='k_pre')
+
+        self.k_ts = tf.math.add(tf.math.sigmoid(self.k_pre_var) * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 
+            tf.compat.v1.constant(self.k_lb, dtype=tf.float32, name='k_lb'), 
+            name='k')
+
+        # the mean in the output of this model only contains k's,but log_std contains the stds for f and k's
+        self.log_std_var = parameter(
+            input_var=inputs[0],
+            length=1+self.n_springs,
+            initializer=tf.constant_initializer(
+                self.f_and_k_log_std_init),
+            trainable=True,
+            name='log_std')
+        return self.k_ts, self.log_std_var
+
+
+    def network_output_spec(self):
+        """
+        Network output spec.
+
+        Return:
+            *inputs (list[str]): List of key(str) for the network outputs.
+        """
+        return ['k', 'log_std']
+
+
+    def get_tensors(self):
+        return dict(k_pre_var=self.k_pre_var, 
+                    k_ts=self.k_ts, 
+                    k_sum_ts=self.k_sum_ts, 
+                    log_std_var=self.log_std_var)
+
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['k_pre_var']
+        del new_dict['k_ts']
+        del new_dict['log_std_var']
+        return new_dict
+
+
 #################################### Hardware as Action ####################################
 
 
@@ -114,19 +192,8 @@ class MechPolicyModel_OptK_HwAsAction(MyBaseModel_OptK):
         self.k_pre_var = parameter(
             input_var=inputs[0],
             length=self.n_springs,
-<<<<<<< HEAD:policies/opt_k/models.py
-            # initializer=tf.constant_initializer(self.k_pre_init), # uncomment this line when training cmaes(hyperparameter)+ppo
-            # trainable=False,  # uncomment this line when training cmaes(hyperparameter)+ppo
-
-            initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub), # uncomment this line when training ppo only
-            trainable=True, # uncomment this line when training ppo only
-=======
-            initializer=tf.constant_initializer(self.k_pre_init), # uncomment this line when training cmaes(hyperparameter)+ppo
-            trainable=False,  # uncomment this line when training cmaes(hyperparameter)+ppo
-
-            # initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub), # uncomment this line when training ppo only
-            # trainable=True, # uncomment this line when training ppo only
->>>>>>> 27e3de7ecffc0919c10cea42d913b777ad8e73ea:policies/opt_k/models.py
+            initializer=tf.random_uniform_initializer(minval=self.k_pre_init_lb, maxval=self.k_pre_init_ub), 
+            trainable=True, 
             name='k_pre')
 
         self.k_ts = tf.math.add(tf.math.sigmoid(self.k_pre_var) * tf.compat.v1.constant(self.k_range, dtype=tf.float32, name='k_range'), 

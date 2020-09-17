@@ -81,5 +81,4 @@ if __name__=='__main__':
     parser.add_argument('--exp_id', default=now.strftime("%Y_%m_%d_%H_%M_%S"), help='experiment id (suffix to data directory name)')
 
     args = parser.parse_args()
-
-    run_experiment(run_task, exp_prefix='ppo_opt_l_hw_as_action_{}'.format(args.exp_id), snapshot_mode='last', seed=args.seed, force_cpu=True)
+    run_experiment(run_task, exp_prefix='ppo_opt_l_hw_as_action_{}_{}_params'.format(args.exp_id, params.n_segments), snapshot_mode='last', seed=args.seed, force_cpu=True)

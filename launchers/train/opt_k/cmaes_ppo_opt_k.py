@@ -19,7 +19,7 @@ from garage.tf.models.mlp_model import MLPModel
 import cma
 
 from mass_spring_envs.envs.mass_spring_env_opt_k import MassSpringEnv_OptK_HwAsAction
-from policies.opt_k.models import MechPolicyModel_OptK_HwAsAction
+from policies.opt_k.models import MechPolicyModel_OptK_FixedHW
 from policies.opt_k.policies import CompMechPolicy_OptK_HwAsAction
 
 from shared_params import params_opt_k as params
@@ -51,12 +51,13 @@ def run_task(snapshot_config, *_):
             output_nonlinearity=tf.nn.tanh,
             )
         
-        mech_policy_model = MechPolicyModel_OptK_HwAsAction(params)
+        mech_policy_model = MechPolicyModel_OptK_FixedHW(params)
 
-        policy = CompMechPolicy_OptK_HwAsAction(name='comp_mech_policy', 
-                env_spec=env.spec, 
-                comp_policy_model=comp_policy_model, 
-                mech_policy_model=mech_policy_model)
+        policy = CompMechPolicy_OptK_HwAsAction( # reuse the policy of HWasAction
+            name='comp_mech_policy', 
+            env_spec=env.spec, 
+            comp_policy_model=comp_policy_model, 
+            mech_policy_model=mech_policy_model)
 
         # baseline = GaussianMLPBaseline(
         #     env_spec=env.spec,

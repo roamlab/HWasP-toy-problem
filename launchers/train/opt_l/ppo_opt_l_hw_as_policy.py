@@ -78,4 +78,4 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
-    run_experiment(run_task, exp_prefix='ppo_opt_l_hw_as_policy_{}'.format(args.exp_id), snapshot_mode='last', seed=args.seed, force_cpu=True)
+    run_experiment(run_task, exp_prefix='ppo_opt_l_hw_as_policy_{}_{}_params'.format(args.exp_id, params.n_segments), snapshot_mode='last', seed=args.seed, force_cpu=True)
