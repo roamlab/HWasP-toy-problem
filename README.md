@@ -1,5 +1,5 @@
-# hw-sw-co-opt-toy-problem
-The 1D mass-spring toy problem of hardware-software co-optimization using RL
+# HWasP-toy-problem
+The 1D mass-spring toy problem of hardware-software co-optimization using RL. Presented in the paper: [Hardware as Policy: Mechanical and Computational Co-Optimization using Deep Reinforcement Learning](https://arxiv.org/abs/2008.04460)
 ```
         --------------
         ^    \    \
@@ -20,17 +20,17 @@ The 1D mass-spring toy problem of hardware-software co-optimization using RL
         |    |     |  point mass m2, position y2
         |    +-----+
         |                               
-        |               |               |
-        |               |               |
-        |               |               |
-        v      Goal     v input f       v g
+        |               |                   |
+        |               |                   |
+        |               |                   |
+        v      Goal     v input f (or i)    v g
         --------------
 ```
-Problem statement:
-- Input to the system: a force f on m2
-- Goal: optimize the computational policy f and the mechanical structure to:
+## Problem statement:
+- Input to the system: a force f (proportional to motor current i) on m2
+- Goal: optimize the computational policy and the mechanical structure to:
     - Primary goal: drag m2 to the goal point and stay there 
-    - Secondary goal: with minimum effort,
+    - Secondary goal: use minimum effort,
 i.e. reward is: 
 ```
 pos_penalty = alpha*abs(y2-h)
@@ -42,21 +42,29 @@ if pos_penalty + vel_penalty > threshold: # meaning the primary goal is not achi
 else: # meaning the primary goal is achieved
     reward = -pos_penalty - vel_penalty - force_penalty
 ``` 
-- 3 optimization cases: optimize for
-    - comp. policy and spring stiffness k
-    - comp. policy and mass m1
-    - comp. policy and bar length l
+- 2 optimization cases: optimize for
+    - comp. policy and spring stiffness k (shown in the ASCII drawing above)
+    - comp. policy and bar length l (shown in the ASCII drawing in the code)
 
-This repo includes:
+## This repo includes:
 - launchers: garage launchers for training and replay
 - mass-spring-envs: the gym environments for the mass-spring system with different optimization goals
+- my_garage: the implementation of Augmented Random Search (ARS) (adapted from the original paper) fitted to the garage framework
 - policies: the computational graphs and garage policies
 - scripts: the bash scripts to start launchers in different terminals in parallel
 - shared_params: the files containing all parameters for this project (a centralized way of parameter management)
 
-To run, you need:
+## Dependencies:
 - tensorflow
 - numpy
 - garage
 - gym
-- install the mass-spring-envs
+- mass-spring-envs (pip install)
+
+## To run the launcher, for example:
+```
+bash setup.bash
+python lauchers/train/ppo_opt_k_hw_as_policy.py
+```
+
+(Please note: the terminology "HW as action" in the code is the same as the "HWasP-Minimal" presented in the paper)
