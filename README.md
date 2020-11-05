@@ -54,16 +54,23 @@ else: # meaning the primary goal is achieved
 - scripts: the bash scripts to start launchers in different terminals in parallel
 - shared_params: the files containing all parameters for this project (a centralized way of parameter management)
 
-## Dependencies:
-- tensorflow
+## Installation:
+You need:
+- tensorflow (1.15)
 - numpy
-- garage
+- garage (2019.10.03)
 - gym
-- mass-spring-envs (pip install)
+- mass-spring-envs
 
-## To run the launcher, for example:
+You can isntall all you need at once by:
 ```
-bash setup.bash
+sh install.sh
+```
+
+
+## To launch the training, for example:
+```
+sh activate_env.sh
 python lauchers/train/ppo_opt_k_hw_as_policy.py
 ```
 
