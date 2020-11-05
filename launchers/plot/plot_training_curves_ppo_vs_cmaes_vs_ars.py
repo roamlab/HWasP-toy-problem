@@ -9,24 +9,27 @@ import shared_params.params_opt_l as params
 
 SKIP = 5
 
-legend = ['HWasP', 'HWasP-Minimal', 'CMA-ES w. RL Inner Loop', 'CMA-ES']
+legend = ['HWasP', 'HWasP-Minimal', 'CMA-ES w. RL Inner Loop', 'CMA-ES', 'ARS']
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('ppo_log_list', help='a list of ppo log dirs, seperate by comma')
     parser.add_argument('cmaes_ppo_log_list', help='a list of cmaes+ppo log dirs, seperate by comma')
     parser.add_argument('cmaes_log_list', help='a list of cmaes log dirs, seperate by comma')
+    parser.add_argument('ars_log_list', help='a list of ars log dirs, seperate by comma')
 
     args = parser.parse_args()
 
     ppo_batch_size = params.ppo_train_kwargs['batch_size']
     cmaes_ppo_batch_size = params.ppo_inner_train_kwargs['n_epochs'] * params.ppo_inner_train_kwargs['batch_size'] * params.cmaes_options['popsize']
     cmaes_batch_size = params.cmaes_train_kwargs['batch_size']
+    ars_batch_size = 2*params.ars_kwargs['num_deltas']*params.n_steps_per_episode
 
 
     ppo_log_list = [(item)for item in args.ppo_log_list.split(',')]
     cmaes_ppo_log_list = [(item)for item in args.cmaes_ppo_log_list.split(',')]
     cmaes_log_list = [(item)for item in args.cmaes_log_list.split(',')]
+    ars_log_list = [(item)for item in args.ars_log_list.split(',')]
 
     plt.figure()
 
@@ -76,12 +79,28 @@ if __name__=='__main__':
         del cmaes_avg_discounted_return
 
 
+    for m, log_path in enumerate(ars_log_list):
+        color = list(color_dict.keys())[i+k+l+m+3]
+        csv_paths = glob.glob('**/'+log_path+'/**/*.csv', recursive=True)
+
+        ars_avg_discounted_return = pd.DataFrame(columns = None)
+        for j, csv_path in enumerate(csv_paths):
+            csv_df = pd.read_csv(csv_path)
+            ars_avg_discounted_return.insert(j, 'AverageDiscountedReturn{}'.format(j), csv_df['AverageDiscountedReturn'])
+
+        mean = ars_avg_discounted_return.mean(numeric_only=True, axis=1)
+        plt.plot((np.array(range(ars_avg_discounted_return.shape[0])) * ars_batch_size), ars_avg_discounted_return, color, alpha=0.1)
+        # import ipdb; ipdb.set_trace()
+        plt.plot((np.array(range(mean.shape[0])) * ars_batch_size), mean, color, alpha=1.0, label=legend[i+k+l+m+3])
+        del ars_avg_discounted_return
+
+
     # plt.plot([1, 4e6], [-268.93, -268.93], color='k') # with optimal params under quasi-static assumption
 
     plt.xlim((-100000, 4000000))
-    plt.ylim((-1300, 400))
+    plt.ylim((-1200, 0))
     plt.xlabel('Environment steps', fontsize=14)
     plt.ylabel('Average discounted return', fontsize=14)
-    plt.legend(loc='upper right', prop={'size': 14})
+    # plt.legend(loc='upper right', prop={'size': 14})
     plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     plt.show()

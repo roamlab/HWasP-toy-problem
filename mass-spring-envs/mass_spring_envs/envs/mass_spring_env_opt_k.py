@@ -97,6 +97,7 @@ class MassSpringEnv_OptK(gym.Env):
         # reward range
         # self.reward_range = (min([self.calc_reward(0.0, self.half_force_range, self.half_vel_range), self.calc_reward(self.pos_range, self.half_force_range, self.half_vel_range)]), 0.0)
 
+        self.acc_reward = 0
 
     def step(self, action):
         raise NotImplementedError
@@ -140,6 +141,7 @@ class MassSpringEnv_OptK(gym.Env):
         # self.y1 = 0.0
         # self.v1 = 0.0
         self.step_cnt = 0
+        self.acc_reward = 0
         return np.array([self.y1, self.v1])
     
 
@@ -200,11 +202,14 @@ class MassSpringEnv_OptK_HwAsAction(MassSpringEnv_OptK):
         reward = self.calc_reward(y2, f, self.v1)
         done = False
         info = {}
+        self.acc_reward = self.acc_reward + reward
         if self.step_cnt == self.n_steps_per_episode:
             print()
             print('y2: ', y2)
             print('v2: ', self.v1)
             print('k: ', k_sum)
+            print('acc reward: ', self.acc_reward)
+            done = True
             tabular.record('Env/k', k_sum)
         return obs, reward, done, info
 
@@ -223,6 +228,7 @@ class MassSpringEnv_OptK_HwAsPolicy(MassSpringEnv_OptK):
             high=self.half_force_range, 
             shape=(2, ), 
             dtype=np.float32) # 1st: redifined action pi, 2nd: original action f
+
 
     def step(self, action):
         """
@@ -252,8 +258,11 @@ class MassSpringEnv_OptK_HwAsPolicy(MassSpringEnv_OptK):
         reward = self.calc_reward(y2, f, self.v1)
         done = False
         info = {}
+        self.acc_reward += reward
         if self.step_cnt == self.n_steps_per_episode:
             print()
             print('y2: ', y2)
             print('v2: ', self.v1)
+            print('acc reward: ', self.acc_reward)
+            done = True
         return obs, reward, done, info

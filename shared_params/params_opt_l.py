@@ -15,7 +15,7 @@ dt = 0.002
 n_steps_per_action = 5
 n_steps_per_episode = 1000
 
-n_segments = 10 
+n_segments = 50 
 
 reward_alpha = 1.0
 reward_beta = 0.05
@@ -97,3 +97,15 @@ ppo_inner_final_average_discounted_return_window_size = 10
 cmaes_options = {'tolfun':1.0, 'tolx':0.001, 'popsize': 8, 'maxiter':5, 'verb_log': 1, 'bounds': [[l_lb,] * n_segments, [l_ub,] * n_segments]}
 cmaes_x0 = [(l_lb + l_ub) / 2,] * n_segments
 cmaes_sigma0 = (l_ub - l_lb) / 4  # init sigma ususally chosen as a quater of the total range
+
+
+# for ars
+ars_kwargs = dict(num_workers=8, 
+                num_deltas=32,
+                deltas_used=16,
+                step_size=0.05,
+                delta_std=0.10, 
+                logdir='logdir',
+                rollout_length=n_steps_per_episode,
+                shift=0)
+ars_n_iter = int(4e6 / (2*ars_kwargs['num_deltas']*n_steps_per_episode)) + 1

@@ -102,3 +102,15 @@ ppo_inner_final_average_discounted_return_window_size = 10
 cmaes_options = {'tolfun':1.0, 'tolx':0.1, 'popsize': 8, 'maxiter':5, 'verb_log': 1, 'bounds': [[k_lb,] * n_springs, [k_ub,] * n_springs]}
 cmaes_x0 = [(k_lb + k_ub) / 2,] * n_springs
 cmaes_sigma0 = (k_ub - k_lb) / 4  # init sigma ususally chosen as a quater of the total range
+
+
+# for ars
+ars_kwargs = dict(num_workers=8, 
+                num_deltas=32,
+                deltas_used=16,
+                step_size=0.05,
+                delta_std=0.10, 
+                logdir='logdir',
+                rollout_length=n_steps_per_episode,
+                shift=0)
+ars_n_iter = int(4e6 / (2*ars_kwargs['num_deltas']*n_steps_per_episode)) + 1
