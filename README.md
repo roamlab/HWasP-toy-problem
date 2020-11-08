@@ -62,7 +62,7 @@ You need:
 - gym
 - mass-spring-envs
 
-You can isntall all you need at once by:
+You can install all you need at once by:
 ```
 sh install.sh
 ```
